@@ -1,0 +1,128 @@
+<?xml version="1.0" ?>
+<!--
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2012 
+# US Government Users Restricted Rights - Use, duplication or
+# disclosure restricted by GSA ADP Schedule Contract with
+# IBM Corp.
+-->
+<operatorModel
+  xmlns="http://www.ibm.com/xmlns/prod/streams/spl/operator" 
+  xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
+  <cppOperatorModel>
+    <context>
+      <description>A multi-connection, multi-threaded source operator.</description>
+      <customLiterals>
+        <enumeration>
+          <name>DataFormat</name>
+          <value>block</value>
+          <value>line</value>
+        </enumeration>
+      </customLiterals>
+      <libraryDependencies>
+        <library>
+          <cmn:description>TCP server library</cmn:description>
+          <cmn:managedLibrary>
+            <cmn:lib>streams.spl.multiconnection.tcp.server</cmn:lib>
+            <cmn:libPath>../../impl/lib</cmn:libPath>
+            <cmn:includePath>../../impl/include</cmn:includePath>
+          </cmn:managedLibrary>
+        </library>
+      </libraryDependencies>
+      <providesSingleThreadedContext>Never</providesSingleThreadedContext>
+    </context> 
+    <parameters>
+      <allowAny>false</allowAny>
+      <parameter>
+        <name>address</name>
+        <description>Server address to listen on</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>port</name>
+        <description>Server port to listen on</description>
+        <optional>false</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>uint32</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>threadPoolSize</name>
+        <description>Number of threads to use for the connections</description>
+        <optional>false</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>uint32</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>connectionCap</name>
+        <description>Maximum number of concurrent connections</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>uint32</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>keepAlive</name>
+        <description>Use the keepalive timer to check if the connection is alive.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>tuple&lt;uint32 time, uint32 probes, uint32 interval&gt;</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>blockSize</name>
+        <description>block size, flush output buffer in case of overflow. If blockSize unused or set to "0" flush buffer in case of "\n" detected in TCP Stream. </description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>uint32</type>
+        <cardinality>1</cardinality>
+      </parameter>
+
+      <parameter>
+        <name>format</name>
+        <description>Format of the data on output port</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>CustomLiteral</expressionMode>
+        <type>DataFormat</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      
+    </parameters>
+    <inputPorts/>
+    <outputPorts>
+      <outputPortSet>
+        <expressionMode>Nonexistent</expressionMode> 
+        <autoAssignment>false</autoAssignment>
+        <completeAssignment>false</completeAssignment>
+        <rewriteAllowed>false</rewriteAllowed>
+        <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+        <tupleMutationAllowed>true</tupleMutationAllowed>
+        <cardinality>1</cardinality>
+        <optional>false</optional>
+      </outputPortSet>  
+      <outputPortSet>
+        <expressionMode>Nonexistent</expressionMode> 
+        <autoAssignment>false</autoAssignment>
+        <completeAssignment>false</completeAssignment>
+        <rewriteAllowed>false</rewriteAllowed>
+        <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+        <tupleMutationAllowed>true</tupleMutationAllowed>
+        <cardinality>1</cardinality>
+        <optional>true</optional>
+      </outputPortSet>  
+    </outputPorts>
+  </cppOperatorModel>
+</operatorModel>

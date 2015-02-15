@@ -1,0 +1,90 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2012 
+# US Government Users Restricted Rights - Use, duplication or
+# disclosure restricted by GSA ADP Schedule Contract with
+# IBM Corp.
+*/
+
+use com.ibm.streamsx.tcp::TCPServer;
+
+// Test SPL application demostrating the usage of the TCPServer operator
+// This composite starts a few instances of the TCPServer operators with different configurations.
+//
+// You must first start this TCPReceiver application and after that
+// start the TCPSender application.
+composite TCPReceiver
+{
+    graph
+        // Receives data as string values with new line boundaries.
+        // There is no optional address parameter specified below. Hence, this operator will listen on
+        // the network interface that is bound to the resolvable IP address for the hostname where
+        // this operator will run.
+        stream<rstring line, rstring srcIP, uint32 srcPort> Result1 = TCPServer() {
+            param
+                port : 22222u;
+                threadPoolSize : 2u; 
+                connectionCap: 5u;
+		// Following is the optional parameter that can be used to 
+		// configure the keepAlive values for the TCP connections.
+                keepAlive: {time=7200u, probes=5u, interval=100u};
+        }
+
+        () as Sink1 = FileSink(Result1) {
+            param
+                file: "Result1.txt";      
+                flush: 1u;
+                quoteStrings: false;
+        }
+
+        // Receives data as string values. it will emit tuples for every 5 characters.
+        // There is an optional second output port for getting the connection details.
+        // We have an optional address parameter specified below. Hence, this operator will listen on
+        // the network interface belonging to the configured address.
+        (stream<rstring line> Result2A; stream<rstring status, rstring srcIP, uint32 srcPort> Result2B) = TCPServer() {
+            param
+                address : getHostName();
+                port : 33333u;
+                threadPoolSize : 2u; 
+                connectionCap: 5u;
+                // Emit a tuple after receiving five characters.
+                blockSize : 5u;
+        }
+
+        () as Sink2A = FileSink(Result2A) {
+            param
+                file: "Result2A.txt";      
+                flush: 1u;
+                quoteStrings: false;
+        }
+
+        () as Sink2B = FileSink(Result2B) {
+            param
+                file: "Result2B.txt";      
+                flush: 1u;
+                quoteStrings: false;
+        }
+
+        // Receives data as binary values i.e. blob
+        // We have an optional address parameter specified below to point to the localhost address.
+        // Hence, this operator will listen on the network interface belonging to the configured address.
+        stream<blob block, rstring srcIP, uint32 srcPort> Result3 = TCPServer() {
+            param
+                address : "localhost";
+                port : 44444u;
+                threadPoolSize : 2u; 
+                connectionCap: 5u;
+                // Emit a tuple with binary data after receiving seven bytes.
+                blockSize : 7u;
+		// Following is the optional parameter that can be used to 
+		// configure the keepAlive values for the TCP connections.
+                keepAlive: {time=3200u, probes=2u, interval=200u};
+        }
+
+        () as Sink3 = FileSink(Result3) {
+            param
+                file: "Result3.txt";      
+                flush: 1u;
+                quoteStrings: false;
+        }
+}

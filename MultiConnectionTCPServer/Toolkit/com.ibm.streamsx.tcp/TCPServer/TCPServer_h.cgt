@@ -1,0 +1,65 @@
+<%
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2012 
+# US Government Users Restricted Rights - Use, duplication or
+# disclosure restricted by GSA ADP Schedule Contract with
+# IBM Corp.
+%>
+
+/* Additional includes go here */
+#include "mcts/server.h"
+#include "mcts/data_item.h"
+
+<%
+#  use TCPServerCommon;
+#  TCPServerCommon::verify($model);
+%>
+
+<%SPL::CodeGen::headerPrologue($model);%>
+
+class MY_OPERATOR : public MY_BASE_OPERATOR 
+{
+
+
+//typedef enum {line, block} outFormat_t;
+
+public:
+    // Constructor
+    MY_OPERATOR();
+
+    // Destructor
+    virtual ~MY_OPERATOR(); 
+
+    // Notify port readiness
+    void allPortsReady(); 
+
+    // Notify pending shutdown
+    void prepareToShutdown(); 
+
+    // Processing for source and threaded operators   
+    void process(uint32_t idx);
+
+    // For handling data from the server
+    void handleData(std::string & line, std::string const & ipAddress, uint32_t port);
+
+	// For handling connection status info from the server
+    void handleInfo(std::string const & status, std::string const & ipAddress, uint32_t port);
+
+private:
+    static __thread OPort0Type * otuple0_;
+    std::vector<OPort0Type *> otuples0_;
+    
+	static mcts::outFormat_t outFormat_;
+
+	<%my $oport1 = $model->getOutputPortAt(1);%>
+	<%if ($oport1) {%>
+    static __thread OPort1Type * otuple1_;
+    std::vector<OPort1Type *> otuples1_;
+    <%}%>
+    
+    SPL::Mutex mutex_;
+    mcts::TCPServer server_;
+}; 
+
+<%SPL::CodeGen::headerEpilogue($model);%>
+
