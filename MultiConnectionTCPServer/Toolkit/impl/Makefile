@@ -19,6 +19,7 @@ lib/server.o: src/mcts/server.cpp \
 	      include/mcts/data_handler.h \
 	      include/mcts/info_handler.h 
 	@echo Compiling 'src/mcts/server.cpp' ...
+	mkdir   -p    ./lib
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/server.cpp -o $@ 
 
 lib/connection.o: src/mcts/connection.cpp \
