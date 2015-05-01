@@ -44,7 +44,7 @@ namespace mcts
           infoHandler_(iHandler),
           dataHandler_(dHandler),
           outFormat_(outFormat),
-    	nextConnection_(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
+    	nextConnection_(new TCPConnection(ioServicePool_.io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
     {
     	streams_boost::asio::ip::tcp::resolver resolver(acceptor_.get_io_service());
         streams_boost::asio::ip::tcp::resolver::query query(address, streams_boost::lexical_cast<std::string>(port));
