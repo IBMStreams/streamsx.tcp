@@ -37,7 +37,7 @@ A few important details about the TCPServer operator to be aware of:
 
 <dt class="dt dlterm">Output Ports</dt>
 <dd class="dd">The <samp class="ph codeph">TCPServer</samp> operator is configurable with two output ports.</dd>
-<dd class="dd">The <b>first output port</b> is mandatory and must contain a tuple with one mandatory and up to two optional attributes. The mandatory attribute must have type <samp class="ph codeph">rstring</samp> (for <samp class="ph codeph">line</samp> attribute) or <samp class="ph codeph">blob</samp> (for <samp class="ph codeph">block</samp> attribute).
+<dd class="dd">The <b>first output port</b> is mandatory and must contain a tuple with one mandatory and up to two optional attributes. The output port punctuation mode is <samp class="ph codeph">Generating</samp>. The <samp class="ph codeph">TCPServer</samp> operator outputs a window marker punctuation when an existing connection is released. The mandatory attribute must have type <samp class="ph codeph">rstring</samp> (for <samp class="ph codeph">line</samp> attribute) or <samp class="ph codeph">blob</samp> (for <samp class="ph codeph">block</samp> attribute).
 <ul class="ul">
 <li class="li">mandatory
 <ul class="ul">

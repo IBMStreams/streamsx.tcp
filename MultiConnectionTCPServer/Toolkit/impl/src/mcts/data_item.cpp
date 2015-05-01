@@ -80,4 +80,15 @@ namespace mcts
         	}
         }
     }
+
+    void DataItem::flushData(outFormat_t outFormat)
+    {
+	size_t size = buffer_.size();
+	// remove \r in case of line format
+	if ((outFormat == line) && (buffer_[size]=='\r'))
+			size--;
+	completeItems_.push_back(std::string(&buffer_[0], &buffer_[0] +  size));
+	buffer_.clear();
+    }
+
 }

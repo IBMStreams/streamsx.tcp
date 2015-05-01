@@ -41,7 +41,13 @@ namespace mcts
             						socket_.remote_endpoint().address().to_string(),
             						socket_.remote_endpoint().port());
         }else{
+            dataItem_.flushData(TCPConnection::outFormat_);
+            if (dataItem_.hasCompleteItems()) {
+                dataHandler_.handleData(dataItem_, remoteIp_, remotePort_);
+                dataItem_.removeCompleteItems();
+            } 
             infoHandler_.handleInfo("disconnected", remoteIp_, remotePort_);
+
         }
     }
   

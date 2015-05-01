@@ -154,6 +154,10 @@ void MY_OPERATOR::handleInfo(std::string const & status, std::string const & ipA
         SPL::AutoMutex am(mutex_);
         otuples1_.push_back(otuple1_);
     }
+    
+    if ( status == "disconnected") {
+	submit(Punctuation::WindowMarker, 0);
+    }
     otuple1_->get_status() = status;
     otuple1_->get_srcIP() = ipAddress;
     otuple1_->get_srcPort() = port;

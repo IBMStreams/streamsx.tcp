@@ -30,6 +30,7 @@ typedef enum {line, block} outFormat_t;
         std::string & getCompleteItemAt(size_t i);
         void removeCompleteItems();
         void addData(char * start, char * end, uint32_t blockSize, outFormat_t outFormat);
+        void flushData(outFormat_t outFormat);
     private:
         std::vector<char> buffer_;
         std::vector<std::string> completeItems_;
