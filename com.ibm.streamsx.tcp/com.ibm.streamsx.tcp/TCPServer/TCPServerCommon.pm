@@ -1,9 +1,7 @@
-# Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2012 
-# US Government Users Restricted Rights - Use, duplication or
-# disclosure restricted by GSA ADP Schedule Contract with
-# IBM Corp.
-
+#######################################################################
+# Copyright (C)2012, International Business Machines Corporation and  
+# others. All Rights Reserved.                                    
+#######################################################################  
 package TCPServerCommon;
 
 use strict;
