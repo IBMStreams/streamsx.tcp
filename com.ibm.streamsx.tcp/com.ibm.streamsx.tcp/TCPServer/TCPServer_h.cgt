@@ -43,6 +43,15 @@ public:
 
 	// For handling connection status info from the server
     void handleInfo(std::string const & status, std::string const & ipAddress, uint32_t port);
+    
+	// For handling string data from a stream and writing it to a client 
+	void handleWrite(std::string & line, std::string const & ipAddress, uint32_t port);
+
+	// For handling blob data from a stream and writing it to a client 
+	void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
+
+	// For handling errors when writing data to a client 
+	void handleError(const streams_boost::system::error_code& e, std::string & line, std::string const & ipAddress, uint32_t port);
 
 private:
     static __thread OPort0Type * otuple0_;

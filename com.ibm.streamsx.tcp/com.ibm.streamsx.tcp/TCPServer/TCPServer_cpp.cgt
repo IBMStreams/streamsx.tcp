@@ -164,5 +164,22 @@ void MY_OPERATOR::handleInfo(std::string const & status, std::string const & ipA
     <%}%>
 }
 
+void MY_OPERATOR::handleWrite(std::string & line, std::string const & ipAddress, uint32_t port)
+{
+	// Here will be async call to write a data and call handleError when it's finished
+}
+
+void MY_OPERATOR::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
+{
+	// Here will be async call to write a data and call handleError when it's finished
+}
+
+void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string & line, std::string const & ipAddress, uint32_t port)
+{
+	if (e) {
+		// Put error handling here: error log, submit tuple and etc.
+	}
+}
+
 <%SPL::CodeGen::implementationEpilogue($model);%>
 
