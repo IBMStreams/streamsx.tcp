@@ -1,0 +1,32 @@
+namespace application ;
+
+use com.ibm.streamsx.tcp::* ;
+
+composite TcpServerDuplex
+{
+	graph
+		stream<TcpServerStrT> Result1 = TCPServer(Functor_3_out0 as inPort0Alias)
+		{
+			param
+				port : 22222u ;
+				threadPoolSize : 2u ;
+				connectionCap : 5u ;
+				keepAlive : { time = 7200u, probes = 5u, interval = 100u } ;
+		}
+
+		() as Sink1 = FileSink(Result1)
+		{
+			param
+				file : "Result1.txt" ;
+				flush : 1u ;
+				quoteStrings : false ;
+		}
+
+		(stream<TcpServerStrT> Functor_3_out0) as Functor_3 = Functor(Result1)
+		{
+//			output
+//				Functor_3_out0: txt = line;
+		}
+
+}
+
