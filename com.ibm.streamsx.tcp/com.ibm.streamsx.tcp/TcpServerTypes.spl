@@ -1,0 +1,5 @@
+namespace com.ibm.streamsx.tcp ;
+
+type TcpServerStrT = rstring line, rstring srcIP, uint32 srcPort ;
+type TcpServerBlobT = blob block, rstring srcIP, uint32 srcPort ;
+
