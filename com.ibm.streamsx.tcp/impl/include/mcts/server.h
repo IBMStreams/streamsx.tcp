@@ -10,8 +10,10 @@
 
 #include <string>
 #include <vector>
+#include <tr1/unordered_map>
 #include <streams_boost/asio.hpp>
 #include <streams_boost/shared_ptr.hpp>
+#include <streams_boost/thread/mutex.hpp>
 
 #include "mcts/data_item.h"
 #include "mcts/connection.h"
@@ -52,11 +54,20 @@ namespace mcts
         /// Stop the server
         void stop();
         
+        void mapConnection(TCPConnectionWeakPtr conn);
+
     private:
         /// Handle completion of an asynchronous accept operation
         /// @param e the error code of the operation
         void handleAccept(streams_boost::system::error_code const & e);
         
+        /// Handle asynchronous write operation
+        template<class Data, class ErrorHandler>
+        void handleWrite(Data & data, std::string const & ipAddress, uint32_t port, ErrorHandler);
+
+        template<class Data>
+        int getDataSize(Data & line);
+
         /// The number of threads that will call io_service::run()
         std::size_t threadPoolSize_;
 
@@ -93,8 +104,10 @@ namespace mcts
         /// The next connection to be accepted.
         TCPConnectionPtr nextConnection_;
 
+        /// TCPConnection map to handle duplex communication
+        std::tr1::unordered_map<std::string, TCPConnectionWeakPtr> connMap_;
 
-
+        streams_boost::mutex mutex_;
     };  
 } 
 

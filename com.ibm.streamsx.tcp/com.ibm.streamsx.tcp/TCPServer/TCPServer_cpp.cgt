@@ -169,6 +169,19 @@ void MY_OPERATOR::handleInfo(std::string const & status, std::string const & ipA
     <%}%>
 }
 
+template<class Data>
+void MY_OPERATOR::handleWrite(Data & data, std::string const & ipAddress, uint32_t port)
+{
+	server_.handleWrite(data, ipAddress, port, streams_boost::bind(&MY_OPERATOR::handleError, this, _1, _2, _3));
+}
+
+void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string & line, std::string const & ipAddress, uint32_t port)
+{
+	if (e) {
+		// Put error handling here: error log, submit tuple and etc.
+	}
+}
+
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
@@ -200,23 +213,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 	<%}%>
 }
 
-
-void MY_OPERATOR::handleWrite(std::string & line, std::string const & ipAddress, uint32_t port)
-{
-	// Here will be async call to write a data and call handleError when it's finished
-}
-
-void MY_OPERATOR::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
-{
-	// Here will be async call to write a data and call handleError when it's finished
-}
-
-void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string & line, std::string const & ipAddress, uint32_t port)
-{
-	if (e) {
-		// Put error handling here: error log, submit tuple and etc.
-	}
-}
-
 <%SPL::CodeGen::implementationEpilogue($model);%>
+
 

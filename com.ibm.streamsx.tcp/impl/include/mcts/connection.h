@@ -17,6 +17,7 @@
 #include <streams_boost/shared_ptr.hpp>
 #include <streams_boost/enable_shared_from_this.hpp>
 #include <streams_boost/function.hpp>
+#include <streams_boost/thread/mutex.hpp>
 
 namespace mcts 
 {
@@ -64,6 +65,9 @@ namespace mcts
         /// Buffer for incoming data.
         streams_boost::array<char, 8192> buffer_;
 
+        /// Buffer for outgoing data.
+        streams_boost::array<char, streams_boost::asio::detail::default_max_transfer_size> bufferToSend_;
+
         /// The incoming data item
         DataItem dataItem_;
 
@@ -81,10 +85,13 @@ namespace mcts
 
         static uint32_t numConnections_;
 
+        streams_boost::mutex mutex_;
+
 
     };
     
     typedef streams_boost::shared_ptr<TCPConnection> TCPConnectionPtr;
+    typedef streams_boost::weak_ptr<TCPConnection> TCPConnectionWeakPtr;
 } 
 
 #endif /* MULTI_CONNECTION_TCP_SERVER_CONNECTION */

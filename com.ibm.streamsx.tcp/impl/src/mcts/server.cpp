@@ -97,6 +97,10 @@ namespace mcts
         if (!e) {
         	if (TCPConnection::getNumberOfConnections()<=maxConnections_) {
         		nextConnection_->start();
+
+        		// Add a new connection to the response connection map
+        		mapConnection(nextConnection_);
+
         		// Set the KeepAlive values as given by the user.
         		if (keepAliveIdleTime_ || keepAliveMaxProbesCnt_ || keepAliveProbeInterval_) {
         			int32_t _fd = static_cast<int32_t> (nextConnection_->socket().native());
@@ -139,6 +143,49 @@ namespace mcts
                                    streams_boost::bind(&TCPServer::handleAccept, this,
                                                        streams_boost::asio::placeholders::error));
         }
+    }
+
+    template<class Data, class ErrorHandler>
+    void TCPServer::handleWrite(Data & data, std::string const & ipAddress, uint32_t port, ErrorHandler)
+    {
+    	std::stringstream connKey;
+    	connKey << ipAddress << ":" << port;
+
+    	if(connMap_.count(connKey) != 0) {
+			if(TCPConnectionPtr connPtr = connMap_[connKey].lock()) {
+				#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+					streams_boost::mutex::scoped_lock scoped_lock(connPtr->mutex_);
+				#else
+					streams_boost::unique_lock<streams_boost::mutex> scoped_lock(connPtr->mutex_);
+				#endif
+				connPtr->bufferToSend_ = data;
+
+				async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_, getDataSize(data)),
+							streams_boost::bind(ErrorHandler, streams_boost::asio::placeholders::error, line, ipAddress, port));
+			}
+    	}
+
+    }
+
+    template<class Data>
+    int TCPServer::getDataSize(Data & raw) {return raw.getSize(); }
+
+    template<>
+    int TCPServer::getDataSize(std::string & line) {return line.length(); }
+
+
+    void TCPServer::mapConnection(TCPConnectionWeakPtr connPtr)
+    {
+    	std::stringstream connKey;
+    	connKey << (*connPtr).remoteIp_ << ":" << (*connPtr).remotePort_;
+
+		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+		#else
+			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+		#endif
+
+		connMap_[connKey.str()] = connPtr;
     }
 }
 
