@@ -7,7 +7,7 @@ namespace com.ibm.streamsx.tcp ;
  */
 type TcpServerStrT = rstring line, rstring srcIP, uint32 srcPort ;
 
-/** Schema for the output port 0 or input port 0 if the data is an blob.
+/** Schema for the output port 0 or input port 0 if the data is a blob.
  * * block represents the data encoded as blob
  * * srcIP represents the IP address of the remote host to connect to.
  * * srcPort represents the port on the remote host to connect to.

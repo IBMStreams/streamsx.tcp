@@ -205,7 +205,8 @@ The TCPServer operator throws an exception and terminates the operator in the fo
     </parameters>
     <inputPorts>
       <inputPortSet>
-        <description/>
+        <description>
+The `TCPServer` operator has one optional input port.  The schema of the input port must be of type `TcpServerStrT` or `TCPServerBlobT` or equivalent.  The operator sends the data received to the `srcIP`:`srcPort` as specified on the incoming tuple.</description>
         <windowingDescription/>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <windowingMode>NonWindowed</windowingMode>
@@ -257,7 +258,7 @@ This optional second output stream generates tuples when a new connection is est
 * "disconnected"
 * "rejected"
 
-    Example: {status="connected",srcIP="192.168.92.130",srcPort=39850}     
+    Example: `status="connected",srcIP="192.168.92.130",srcPort=39850`     
 
 </description>      
         <expressionMode>Nonexistent</expressionMode>
