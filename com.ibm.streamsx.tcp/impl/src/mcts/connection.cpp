@@ -50,12 +50,12 @@ namespace mcts
         }
     }
 
-    std::string & remoteIp()
+    std::string & TCPConnection::remoteIp()
     {
         return remoteIp_;
     }
 
-    uint32_t remotePort()
+    uint32_t TCPConnection::remotePort()
     {
         return remotePort_;
     }

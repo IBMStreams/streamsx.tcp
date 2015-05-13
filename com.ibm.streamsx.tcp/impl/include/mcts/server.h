@@ -18,6 +18,7 @@
 #include "mcts/data_item.h"
 #include "mcts/connection.h"
 #include "mcts/data_handler.h"
+#include "mcts/error_handler.h"
 #include "mcts/info_handler.h"
 #include "mcts/io_service_pool.h"
 
@@ -41,8 +42,7 @@ namespace mcts
         /// @param handler that will send connection status infos
         TCPServer(std::string const & address, uint32_t port, 
                   std::size_t threadPoolSize, std::size_t maxConnections, uint32_t blockSize, outFormat_t outFormat,
-                  DataHandler::Handler dhandler,
-                  InfoHandler::Handler iHandler);
+                  DataHandler::Handler dhandler, ErrorHandler::Handler eHandler, InfoHandler::Handler iHandler);
         
         /// Set the keep alive socket options
         void setKeepAlive(int32_t time, int32_t probes, int32_t interval);
@@ -54,6 +54,12 @@ namespace mcts
         /// Stop the server
         void stop();
         
+        /// Handle asynchronous write operation
+//        typedef streams_boost::function<void (const streams_boost::system::error_code& e, std::string const & ip, uint32_t port)> ErrorHandler;
+//        void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port, ErrorHandler const & handler);
+
+        void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
+
         void mapConnection(TCPConnectionWeakPtr conn);
 
     private:
@@ -61,13 +67,6 @@ namespace mcts
         /// @param e the error code of the operation
         void handleAccept(streams_boost::system::error_code const & e);
         
-        /// Handle asynchronous write operation
-        template<class Data, class ErrorHandler>
-        void handleWrite(Data & data, std::string const & ipAddress, uint32_t port, ErrorHandler);
-
-        template<class Data>
-        int getDataSize(Data & line);
-
         /// The number of threads that will call io_service::run()
         std::size_t threadPoolSize_;
 
@@ -97,6 +96,9 @@ namespace mcts
 
         /// The handler for all incoming requests.
         DataHandler dataHandler_;
+
+        /// The handler used to process the error messages.
+        ErrorHandler errorHandler_;
 
         /// The format output data: line (as rstring) or block (as blob)
         outFormat_t outFormat_;

@@ -21,7 +21,6 @@ class MY_OPERATOR : public MY_BASE_OPERATOR
 
 
 //typedef enum {line, block} outFormat_t;
-//typedef streams_boost::function<void (const streams_boost::system::error_code& e, std::string const & ip, uint32_t port)> ErrorHandler;
 
 public:
     // Constructor
@@ -49,8 +48,8 @@ public:
     void handleInfo(std::string const & status, std::string const & ipAddress, uint32_t port);
     
 	// For handling string data from a stream and writing it to a client 
-    template<class Data>
-	void handleWrite(Data & data, std::string const & ipAddress, uint32_t port);
+	void handleWrite(std::string & line, std::string const & ipAddress, uint32_t port);
+	void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
 
 	// For handling errors when writing data to a client 
 	void handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port);

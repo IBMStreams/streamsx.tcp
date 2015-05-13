@@ -33,6 +33,7 @@ namespace mcts
                          uint32_t blockSize,
                          outFormat_t outFormat,
                          DataHandler::Handler dHandler,
+                         ErrorHandler::Handler eHandler,
                          InfoHandler::Handler iHandler)
         : threadPoolSize_(threadPoolSize),
           maxConnections_(maxConnections),
@@ -44,6 +45,7 @@ namespace mcts
           acceptor_(ioServicePool_.get_io_service()),
           infoHandler_(iHandler),
           dataHandler_(dHandler),
+          errorHandler_(eHandler),
           outFormat_(outFormat),
     	nextConnection_(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
     {
@@ -146,8 +148,8 @@ namespace mcts
         }
     }
 
-    template<class Data, class ErrorHandler>
-    void TCPServer::handleWrite(Data & data, std::string const & ipAddress, uint32_t port, ErrorHandler)
+//    void TCPServer::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port, ErrorHandler const & handler)
+    void TCPServer::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
     {
     	std::stringstream connKey;
     	connKey << ipAddress << ":" << port;
@@ -159,21 +161,23 @@ namespace mcts
 				#else
 					streams_boost::unique_lock<streams_boost::mutex> scoped_lock(connPtr->mutex_);
 				#endif
-				connPtr->bufferToSend_ = data;
 
-				async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_, getDataSize(data)),
-							ErrorHandler(streams_boost::asio::placeholders::error, ipAddress, port));
+				uint64_t size = raw.getSize();
+				if(raw.ownsData()) {
+					connPtr->bufferToSend_.adoptData(raw.releaseData(size), size);
+				}
+				else {
+					connPtr->bufferToSend_.adoptData(const_cast<unsigned char *>(raw.getData()), size);
+				}
+
+				async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_.getData(), size),
+						streams_boost::bind(&ErrorHandler::handleError, errorHandler_,
+											streams_boost::asio::placeholders::error,
+											ipAddress, port));
 			}
     	}
 
     }
-
-    template<class Data>
-    int TCPServer::getDataSize(Data & raw) {return raw.getSize(); }
-
-    template<>
-    int TCPServer::getDataSize(std::string & line) {return line.length(); }
-
 
     void TCPServer::mapConnection(TCPConnectionWeakPtr connPtr)
     {
