@@ -55,9 +55,6 @@ namespace mcts
         void stop();
         
         /// Handle asynchronous write operation
-//        typedef streams_boost::function<void (const streams_boost::system::error_code& e, std::string const & ip, uint32_t port)> ErrorHandler;
-//        void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port, ErrorHandler const & handler);
-
         void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
 
         void mapConnection(TCPConnectionWeakPtr conn);

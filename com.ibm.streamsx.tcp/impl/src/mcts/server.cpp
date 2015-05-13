@@ -148,7 +148,6 @@ namespace mcts
         }
     }
 
-//    void TCPServer::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port, ErrorHandler const & handler)
     void TCPServer::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
     {
     	std::stringstream connKey;
