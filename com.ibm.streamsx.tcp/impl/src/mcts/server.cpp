@@ -10,6 +10,7 @@
 #include <streams_boost/thread.hpp>
 #include <streams_boost/bind.hpp>
 #include <streams_boost/shared_ptr.hpp>
+#include <streams_boost/weak_ptr.hpp>
 #include <streams_boost/lexical_cast.hpp>
 #include <vector>
 #include <iostream>
@@ -151,8 +152,8 @@ namespace mcts
     	std::stringstream connKey;
     	connKey << ipAddress << ":" << port;
 
-    	if(connMap_.count(connKey) != 0) {
-			if(TCPConnectionPtr connPtr = connMap_[connKey].lock()) {
+    	if(connMap_.count(connKey.str()) != 0) {
+			if(TCPConnectionPtr connPtr = connMap_[connKey.str()].lock()) {
 				#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
 					streams_boost::mutex::scoped_lock scoped_lock(connPtr->mutex_);
 				#else
@@ -161,7 +162,7 @@ namespace mcts
 				connPtr->bufferToSend_ = data;
 
 				async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_, getDataSize(data)),
-							streams_boost::bind(ErrorHandler, streams_boost::asio::placeholders::error, line, ipAddress, port));
+							ErrorHandler(streams_boost::asio::placeholders::error, ipAddress, port));
 			}
     	}
 
@@ -177,15 +178,17 @@ namespace mcts
     void TCPServer::mapConnection(TCPConnectionWeakPtr connPtr)
     {
     	std::stringstream connKey;
-    	connKey << (*connPtr).remoteIp_ << ":" << (*connPtr).remotePort_;
+    	if(TCPConnectionPtr connTmpPtr = connPtr.lock()) {
+			connKey << connTmpPtr->remoteIp() << ":" << connTmpPtr->remotePort();
 
-		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
-		#else
-			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
-		#endif
+			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+			#else
+				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+			#endif
 
-		connMap_[connKey.str()] = connPtr;
+			connMap_[connKey.str()] = connPtr;
+    	}
     }
 }
 

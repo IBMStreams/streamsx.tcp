@@ -49,7 +49,17 @@ namespace mcts
 
         }
     }
-  
+
+    std::string & remoteIp()
+    {
+        return remoteIp_;
+    }
+
+    uint32_t remotePort()
+    {
+        return remotePort_;
+    }
+
     streams_boost::asio::ip::tcp::socket & TCPConnection::socket()
     {
         return socket_;

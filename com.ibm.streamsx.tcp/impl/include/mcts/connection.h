@@ -15,6 +15,7 @@
 #include <streams_boost/asio.hpp>
 #include <streams_boost/array.hpp>
 #include <streams_boost/shared_ptr.hpp>
+#include <streams_boost/weak_ptr.hpp>
 #include <streams_boost/enable_shared_from_this.hpp>
 #include <streams_boost/function.hpp>
 #include <streams_boost/thread/mutex.hpp>
@@ -41,6 +42,12 @@ namespace mcts
         {
             return numConnections_;
         }
+
+        /// Get the ip associated with the connection.
+        std::string & remoteIp();
+
+        /// Get the ip associated with the connection.
+        uint32_t remotePort();
 
         /// Get the socket associated with the connection.
         streams_boost::asio::ip::tcp::socket & socket();
