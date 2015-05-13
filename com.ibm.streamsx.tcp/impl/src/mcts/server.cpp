@@ -10,6 +10,7 @@
 #include <streams_boost/thread.hpp>
 #include <streams_boost/bind.hpp>
 #include <streams_boost/shared_ptr.hpp>
+#include <streams_boost/weak_ptr.hpp>
 #include <streams_boost/lexical_cast.hpp>
 #include <vector>
 #include <iostream>
@@ -32,6 +33,7 @@ namespace mcts
                          uint32_t blockSize,
                          outFormat_t outFormat,
                          DataHandler::Handler dHandler,
+                         ErrorHandler::Handler eHandler,
                          InfoHandler::Handler iHandler)
         : threadPoolSize_(threadPoolSize),
           maxConnections_(maxConnections),
@@ -43,6 +45,7 @@ namespace mcts
           acceptor_(ioServicePool_.get_io_service()),
           infoHandler_(iHandler),
           dataHandler_(dHandler),
+          errorHandler_(eHandler),
           outFormat_(outFormat),
     	nextConnection_(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
     {
@@ -97,6 +100,10 @@ namespace mcts
         if (!e) {
         	if (TCPConnection::getNumberOfConnections()<=maxConnections_) {
         		nextConnection_->start();
+
+        		// Add a new connection to the response connection map
+        		mapConnection(nextConnection_);
+
         		// Set the KeepAlive values as given by the user.
         		if (keepAliveIdleTime_ || keepAliveMaxProbesCnt_ || keepAliveProbeInterval_) {
         			int32_t _fd = static_cast<int32_t> (nextConnection_->socket().native());
@@ -139,6 +146,52 @@ namespace mcts
                                    streams_boost::bind(&TCPServer::handleAccept, this,
                                                        streams_boost::asio::placeholders::error));
         }
+    }
+
+    void TCPServer::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
+    {
+    	std::stringstream connKey;
+    	connKey << ipAddress << ":" << port;
+
+    	if(connMap_.count(connKey.str()) != 0) {
+			if(TCPConnectionPtr connPtr = connMap_[connKey.str()].lock()) {
+				#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+					streams_boost::mutex::scoped_lock scoped_lock(connPtr->mutex_);
+				#else
+					streams_boost::unique_lock<streams_boost::mutex> scoped_lock(connPtr->mutex_);
+				#endif
+
+				uint64_t size = raw.getSize();
+				if(raw.ownsData()) {
+					connPtr->bufferToSend_.adoptData(raw.releaseData(size), size);
+				}
+				else {
+					connPtr->bufferToSend_.adoptData(const_cast<unsigned char *>(raw.getData()), size);
+				}
+
+				async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_.getData(), size),
+						streams_boost::bind(&ErrorHandler::handleError, errorHandler_,
+											streams_boost::asio::placeholders::error,
+											ipAddress, port));
+			}
+    	}
+
+    }
+
+    void TCPServer::mapConnection(TCPConnectionWeakPtr connPtr)
+    {
+    	std::stringstream connKey;
+    	if(TCPConnectionPtr connTmpPtr = connPtr.lock()) {
+			connKey << connTmpPtr->remoteIp() << ":" << connTmpPtr->remotePort();
+
+			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+			#else
+				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+			#endif
+
+			connMap_[connKey.str()] = connPtr;
+    	}
     }
 }
 

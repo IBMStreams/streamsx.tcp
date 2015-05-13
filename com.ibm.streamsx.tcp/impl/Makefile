@@ -16,6 +16,7 @@ lib/server.o: src/mcts/server.cpp \
 	      include/mcts/server.h \
 	      include/mcts/connection.h \
 	      include/mcts/data_handler.h \
+	      include/mcts/error_handler.h \
 	      include/mcts/info_handler.h 
 	@echo Compiling 'src/mcts/server.cpp' ...
 	mkdir   -p    ./lib
@@ -25,6 +26,7 @@ lib/connection.o: src/mcts/connection.cpp \
 	          include/mcts/connection.h \
                   include/mcts/data_item.h \
                   include/mcts/data_handler.h \
+		  include/mcts/error_handler.h \
 		  include/mcts/info_handler.h 
 	@echo Compiling 'src/mcts/connection.cpp' ...
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/connection.cpp -o $@ 
@@ -32,6 +34,10 @@ lib/connection.o: src/mcts/connection.cpp \
 lib/data_handler.o: src/mcts/data_handler.cpp include/mcts/data_item.h 
 	@echo Compiling 'src/mcts/data_handler.cpp' ...
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/data_handler.cpp -o $@ 
+
+lib/error_handler.o: src/mcts/error_handler.cpp include/mcts/data_item.h 
+	@echo Compiling 'src/mcts/error_handler.cpp' ...
+	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/error_handler.cpp -o $@ 
 
 lib/info_handler.o: src/mcts/info_handler.cpp include/mcts/data_item.h 
 	@echo Compiling 'src/mcts/info_handler.cpp' ...
@@ -50,6 +56,7 @@ lib/libstreams.spl.multiconnection.tcp.server.so: \
 	lib/connection.o \
 	lib/data_item.o \
 	lib/data_handler.o \
+	lib/error_handler.o \
 	lib/info_handler.o \
 	lib/io_service_pool.o 
 	@echo Building C++ shared library '$@'

@@ -15,8 +15,12 @@
 #include <streams_boost/asio.hpp>
 #include <streams_boost/array.hpp>
 #include <streams_boost/shared_ptr.hpp>
+#include <streams_boost/weak_ptr.hpp>
 #include <streams_boost/enable_shared_from_this.hpp>
 #include <streams_boost/function.hpp>
+#include <streams_boost/thread/mutex.hpp>
+
+#include <SPL/Runtime/Type/Blob.h>
 
 namespace mcts 
 {
@@ -41,11 +45,23 @@ namespace mcts
             return numConnections_;
         }
 
+        /// Get the ip associated with the connection.
+        std::string & remoteIp();
+
+        /// Get the ip associated with the connection.
+        uint32_t remotePort();
+
         /// Get the socket associated with the connection.
         streams_boost::asio::ip::tcp::socket & socket();
 
         /// Start the first asynchronous operation for the connection.
         void start();
+
+        /// Buffer for outgoing data.
+//        streams_boost::array<char, streams_boost::asio::detail::default_max_transfer_size> bufferToSend_;
+        SPL::blob bufferToSend_;
+
+        streams_boost::mutex mutex_;
 
     private:
         /// Handle completion of a read operation.
@@ -81,10 +97,10 @@ namespace mcts
 
         static uint32_t numConnections_;
 
-
     };
     
     typedef streams_boost::shared_ptr<TCPConnection> TCPConnectionPtr;
+    typedef streams_boost::weak_ptr<TCPConnection> TCPConnectionWeakPtr;
 } 
 
 #endif /* MULTI_CONNECTION_TCP_SERVER_CONNECTION */
