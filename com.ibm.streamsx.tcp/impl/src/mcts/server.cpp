@@ -157,36 +157,59 @@ namespace mcts
     {
     	std::stringstream connKey;
     	connKey << ipAddress << ":" << port;
+		bool connExist = false;
+		TCPConnectionWeakPtr connWeakPtr;
 
-		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-			streams_boost::mutex::scoped_lock conn_scoped_lock(mutex_);
-		#else
-			streams_boost::unique_lock<streams_boost::mutex> conn_scoped_lock(mutex_);
-		#endif
+    	{
+			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+				streams_boost::mutex::scoped_lock conn_scoped_lock(mutex_);
+			#else
+				streams_boost::unique_lock<streams_boost::mutex> conn_scoped_lock(mutex_);
+			#endif
 
-    	if(connMap_.count(connKey.str()) != 0) {
-			if(TCPConnectionPtr connPtr = connMap_[connKey.str()].lock()) {
-				#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-					streams_boost::mutex::scoped_lock data_scoped_lock(connPtr->mutex_);
-				#else
-					streams_boost::unique_lock<streams_boost::mutex> data_scoped_lock(connPtr->mutex_);
-				#endif
+			connExist = connMap_.count(connKey.str()) != 0;
 
-				uint64_t size = raw.getSize();
-				if(raw.ownsData()) {
-					connPtr->bufferToSend_.adoptData(raw.releaseData(size), size);
-				}
-				else {
-					connPtr->bufferToSend_.adoptData(const_cast<unsigned char *>(raw.getData()), size);
-				}
-
-				async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_.getData(), size),
-						streams_boost::bind(&ErrorHandler::handleError, errorHandler_,
-											streams_boost::asio::placeholders::error,
-											ipAddress, port));
-			}
+			if (connExist) connWeakPtr = connMap_[connKey.str()];
     	}
 
+    	if(connExist) {
+			if(TCPConnectionPtr connPtr = connWeakPtr.lock()) {
+
+				if (connPtr->socket().is_open()) {
+
+					#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+						streams_boost::mutex::scoped_lock data_scoped_lock(connPtr->mutex_);
+					#else
+						streams_boost::unique_lock<streams_boost::mutex> data_scoped_lock(connPtr->mutex_);
+					#endif
+
+					uint64_t size = raw.getSize();
+					if(raw.ownsData()) {
+						connPtr->bufferToSend_.adoptData(raw.releaseData(size), size);
+					}
+					else {
+						connPtr->bufferToSend_.adoptData(const_cast<unsigned char *>(raw.getData()), size);
+					}
+
+					async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_.getData(), size),
+							streams_boost::bind(&ErrorHandler::handleError, errorHandler_,
+												streams_boost::asio::placeholders::error,
+												ipAddress, port));
+
+					return;
+				}
+			}
+
+			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+				streams_boost::mutex::scoped_lock conn_scoped_lock(mutex_);
+			#else
+				streams_boost::unique_lock<streams_boost::mutex> conn_scoped_lock(mutex_);
+			#endif
+
+			connMap_.erase(connKey.str());
+    	}
+
+		errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::connection_aborted), ipAddress, port);
     }
 
     void TCPServer::mapConnection(TCPConnectionWeakPtr connPtr)
