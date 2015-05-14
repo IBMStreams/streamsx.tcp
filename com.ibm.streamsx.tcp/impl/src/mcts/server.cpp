@@ -153,12 +153,18 @@ namespace mcts
     	std::stringstream connKey;
     	connKey << ipAddress << ":" << port;
 
+		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+			streams_boost::mutex::scoped_lock conn_scoped_lock(mutex_);
+		#else
+			streams_boost::unique_lock<streams_boost::mutex> conn_scoped_lock(mutex_);
+		#endif
+
     	if(connMap_.count(connKey.str()) != 0) {
 			if(TCPConnectionPtr connPtr = connMap_[connKey.str()].lock()) {
 				#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-					streams_boost::mutex::scoped_lock scoped_lock(connPtr->mutex_);
+					streams_boost::mutex::scoped_lock data_scoped_lock(connPtr->mutex_);
 				#else
-					streams_boost::unique_lock<streams_boost::mutex> scoped_lock(connPtr->mutex_);
+					streams_boost::unique_lock<streams_boost::mutex> data_scoped_lock(connPtr->mutex_);
 				#endif
 
 				uint64_t size = raw.getSize();
@@ -185,9 +191,9 @@ namespace mcts
 			connKey << connTmpPtr->remoteIp() << ":" << connTmpPtr->remotePort();
 
 			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+				streams_boost::mutex::scoped_lock conn_scoped_lock(mutex_);
 			#else
-				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+				streams_boost::unique_lock<streams_boost::mutex> conn_scoped_lock(mutex_);
 			#endif
 
 			connMap_[connKey.str()] = connPtr;
