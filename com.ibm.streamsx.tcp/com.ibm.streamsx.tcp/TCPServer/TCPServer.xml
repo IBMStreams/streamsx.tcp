@@ -37,13 +37,13 @@ The TCPServer operator throws an exception and terminates the operator in the fo
         }
         () as Sink = FileSink(Result) {
             param
-                file: "output";      
+                file: &quot;output&quot;;      
                 flush: 1u;
         }
     } 
 
     // TCPServer with output as blob and optional 2nd output port
-    // TCPServer listen on "localhost"
+    // TCPServer listen on &quot;localhost&quot;
 
     composite Main
     {
@@ -54,23 +54,23 @@ The TCPServer operator throws an exception and terminates the operator in the fo
                 threadPoolSize : 1u; 
                 connectionCap: 5u;
                 blockSize: 256u;
-                address: "localhost";
+                address: &quot;localhost&quot;;
         }
         () as ResultSink = FileSink(Result) {
             param
-                file: "result";      
+                file: &quot;result&quot;;      
                 flush: 1u;
         }
         () as StatusSink = FileSink(Status) {
             param
-                file: "status";      
+                file: &quot;status&quot;;      
                 flush: 1u;
         }
     } 
 
     // TCPServer with output as rstring
-    // generates output tuples when "\n" is received.
-    // If there is no "\n", it generates an output tuple after receiving 65535 bytes 
+    // generates output tuples when &quot;\n&quot; is received.
+    // If there is no &quot;\n&quot;, it generates an output tuple after receiving 65535 bytes 
 
     composite Main
     {
@@ -85,7 +85,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
         }
         () as Sink = FileSink(Result) {
             param
-                file: "output";      
+                file: &quot;output&quot;;      
                 flush: 1u;
         }
     } 
@@ -105,13 +105,20 @@ The TCPServer operator throws an exception and terminates the operator in the fo
          }
         () as Sink = FileSink(Result) {
             param
-                file: "output";      
+                file: &quot;output&quot;;      
                 flush: 1u;
         }
     }
 
     
 </description>
+      <metrics>
+        <metric>
+          <name>nInboundConnections</name>
+          <description/>
+          <kind>Gauge</kind>
+        </metric>
+      </metrics>
       <customLiterals>
         <enumeration>
           <name>DataFormat</name>
@@ -136,7 +143,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
       <allowAny>false</allowAny>
       <parameter>
         <name>address</name>
-        <description>This optional parameter with type rstring specifies a resolvable IP address or a machine name (e-g: myserver1.ibm.com, localhost etc.) on which the connections will be accepted. If "0.0.0.0" is given as an address, then the TCPServer operator will listen on all the available network interfaces including localhost (127.0.0.1). If the address parameter is not specified, this operator will listen on a network interface bound to the actual IP address of that machine's fully qualified host name.</description>
+        <description>This optional parameter with type rstring specifies a resolvable IP address or a machine name (e-g: myserver1.ibm.com, localhost etc.) on which the connections will be accepted. If &quot;0.0.0.0&quot; is given as an address, then the TCPServer operator will listen on all the available network interfaces including localhost (127.0.0.1). If the address parameter is not specified, this operator will listen on a network interface bound to the actual IP address of that machine's fully qualified host name.</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -207,7 +214,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
       <inputPortSet>
         <description>
 The `TCPServer` operator has one optional input port.  The schema of the input port must be of type `TcpServerStrT` or `TCPServerBlobT` or equivalent.  The operator sends the data received to the `srcIP`:`srcPort` as specified on the incoming tuple.</description>
-        <windowingDescription/>
+        <windowingDescription></windowingDescription>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <windowingMode>NonWindowed</windowingMode>
         <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
@@ -218,7 +225,7 @@ The `TCPServer` operator has one optional input port.  The schema of the input p
     </inputPorts>
     <outputPorts>
       <outputPortSet>
-      <description>
+        <description>
 The first output port is mandatory and must contain a tuple with one mandatory and up to two optional attributes. The output port punctuation mode is Generating. The TCPServer operator outputs a window marker punctuation when an existing connection is released. The mandatory attribute must have type rstring (for line attribute) or blob (for block attribute).
 
 * mandatory
@@ -230,7 +237,7 @@ The first output port is mandatory and must contain a tuple with one mandatory a
 
 This output stream will carry tuples depending on the mandatory attribute used: 
 
-* line Collect characters until the end of line marker is detected or, when parameter blockSize is given, the number of received characters exceeds the blockSize. Valid values for the EOL marker are "\n" and "\r\n". In this case, output tuples emitted by this operator will not contain the EOL marker.
+* line Collect characters until the end of line marker is detected or, when parameter blockSize is given, the number of received characters exceeds the blockSize. Valid values for the EOL marker are &quot;\n&quot; and &quot;\r\n&quot;. In this case, output tuples emitted by this operator will not contain the EOL marker.
 * block Collect bytes until the number of received bytes exceeds the given blockSize.
     
       </description>
@@ -245,7 +252,7 @@ This output stream will carry tuples depending on the mandatory attribute used:
         <optional>false</optional>
       </outputPortSet>
       <outputPortSet>
-<description>
+        <description>
 The second output port is optional and must use a Stream schema with the following three attributes:
 
 * First attribute name is status and type rstring
@@ -254,13 +261,13 @@ The second output port is optional and must use a Stream schema with the followi
 
 This optional second output stream generates tuples when a new connection is established or when an existing connection is released or when a connect is rejected because of threadPoolSize/connectionCap is exceeded. Additional information provided in this output stream is useful for application-specific logging, filtering, book-keeping etc. The status attribute in this output stream will carry one of these values:
 
-* "connected"
-* "disconnected"
-* "rejected"
+* &quot;connected&quot;
+* &quot;disconnected&quot;
+* &quot;rejected&quot;
 
-    Example: `status="connected",srcIP="192.168.92.130",srcPort=39850`     
+    Example: `status=&quot;connected&quot;,srcIP=&quot;192.168.92.130&quot;,srcPort=39850`     
 
-</description>      
+</description>
         <expressionMode>Nonexistent</expressionMode>
         <autoAssignment>false</autoAssignment>
         <completeAssignment>false</completeAssignment>

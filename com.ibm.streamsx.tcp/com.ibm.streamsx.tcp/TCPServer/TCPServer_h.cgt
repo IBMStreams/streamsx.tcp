@@ -5,7 +5,7 @@
 #######################################################################  
 %>
 
-/* Additional includes go here */
+#include <SPL/Runtime/Operator/OperatorMetrics.h>
 #include "mcts/server.h"
 #include "mcts/data_item.h"
 
@@ -54,6 +54,9 @@ public:
 	// For handling errors when writing data to a client 
 	void handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port);
 
+	// For handling metrics
+	void handleMetrics(int64_t nConn);
+
 private:
     static __thread OPort0Type * otuple0_;
     std::vector<OPort0Type *> otuples0_;
@@ -68,6 +71,7 @@ private:
     
     SPL::Mutex mutex_;
     mcts::TCPServer server_;
+	OperatorMetrics & opm_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

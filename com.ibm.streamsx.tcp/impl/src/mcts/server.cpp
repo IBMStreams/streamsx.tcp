@@ -34,7 +34,8 @@ namespace mcts
                          outFormat_t outFormat,
                          DataHandler::Handler dHandler,
                          ErrorHandler::Handler eHandler,
-                         InfoHandler::Handler iHandler)
+                         InfoHandler::Handler iHandler,
+                         MetricsHandler::Handler mHandler)
         : threadPoolSize_(threadPoolSize),
           maxConnections_(maxConnections),
           blockSize_(blockSize),
@@ -46,6 +47,7 @@ namespace mcts
           infoHandler_(iHandler),
           dataHandler_(dHandler),
           errorHandler_(eHandler),
+          metricsHandler_(mHandler),
           outFormat_(outFormat),
     	nextConnection_(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
     {
@@ -103,6 +105,9 @@ namespace mcts
 
         		// Add a new connection to the response connection map
         		mapConnection(nextConnection_);
+        		// Update number of open connections metric
+        		metricsHandler_.handleMetrics((int64_t)mcts::TCPConnection::getNumberOfConnections());
+
 
         		// Set the KeepAlive values as given by the user.
         		if (keepAliveIdleTime_ || keepAliveMaxProbesCnt_ || keepAliveProbeInterval_) {

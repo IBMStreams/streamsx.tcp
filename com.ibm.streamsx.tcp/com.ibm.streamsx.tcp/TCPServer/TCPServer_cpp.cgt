@@ -77,8 +77,10 @@ MY_OPERATOR::MY_OPERATOR()
               <%=$port%>, <%=$threadPoolSize%>, <%=$connectionCap%>, <%=$blockSize%>,  MY_OPERATOR::outFormat_,
               streams_boost::bind(&MY_OPERATOR::handleData, this, _1, _2, _3) ,
               streams_boost::bind(&MY_OPERATOR::handleError, this, _1, _2, _3) ,
-              streams_boost::bind(&MY_OPERATOR::handleInfo, this, _1, _2, _3)
-              )
+              streams_boost::bind(&MY_OPERATOR::handleInfo, this, _1, _2, _3) ,
+              streams_boost::bind(&MY_OPERATOR::handleMetrics, this, _1)
+              ),
+	  opm_(getContext().getMetrics())
 {
     // Initialization code goes here
     // If the user provided a KeepAlive parameter, we can set that now.
@@ -190,6 +192,12 @@ void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::s
 	if (e) {
 		// Put error handling here: error log, submit tuple and etc.
 	}
+}
+
+void MY_OPERATOR::handleMetrics(int64_t nConn)
+{
+	Metric & nocMetric = opm_.getCustomMetricByName("nInboundConnections");
+	nocMetric.setValueNoLock(nConn);
 }
 
 

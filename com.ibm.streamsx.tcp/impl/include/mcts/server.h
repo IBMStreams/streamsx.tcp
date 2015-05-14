@@ -20,6 +20,7 @@
 #include "mcts/data_handler.h"
 #include "mcts/error_handler.h"
 #include "mcts/info_handler.h"
+#include "mcts/metrics_handler.h"
 #include "mcts/io_service_pool.h"
 
 namespace mcts 
@@ -42,7 +43,7 @@ namespace mcts
         /// @param handler that will send connection status infos
         TCPServer(std::string const & address, uint32_t port, 
                   std::size_t threadPoolSize, std::size_t maxConnections, uint32_t blockSize, outFormat_t outFormat,
-                  DataHandler::Handler dhandler, ErrorHandler::Handler eHandler, InfoHandler::Handler iHandler);
+                  DataHandler::Handler dhandler, ErrorHandler::Handler eHandler, InfoHandler::Handler iHandler, MetricsHandler::Handler mHandler);
         
         /// Set the keep alive socket options
         void setKeepAlive(int32_t time, int32_t probes, int32_t interval);
@@ -96,6 +97,9 @@ namespace mcts
 
         /// The handler used to process the error messages.
         ErrorHandler errorHandler_;
+
+        /// The handler used to process the metrics.
+        MetricsHandler metricsHandler_;
 
         /// The format output data: line (as rstring) or block (as blob)
         outFormat_t outFormat_;

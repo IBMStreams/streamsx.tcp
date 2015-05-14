@@ -17,7 +17,8 @@ lib/server.o: src/mcts/server.cpp \
 	      include/mcts/connection.h \
 	      include/mcts/data_handler.h \
 	      include/mcts/error_handler.h \
-	      include/mcts/info_handler.h 
+	      include/mcts/info_handler.h \
+	      include/mcts/metrics_handler.h 
 	@echo Compiling 'src/mcts/server.cpp' ...
 	mkdir   -p    ./lib
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/server.cpp -o $@ 
@@ -27,7 +28,8 @@ lib/connection.o: src/mcts/connection.cpp \
                   include/mcts/data_item.h \
                   include/mcts/data_handler.h \
 		  include/mcts/error_handler.h \
-		  include/mcts/info_handler.h 
+		  include/mcts/info_handler.h \
+		  include/mcts/metrics_handler.h 
 	@echo Compiling 'src/mcts/connection.cpp' ...
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/connection.cpp -o $@ 
 
@@ -35,13 +37,17 @@ lib/data_handler.o: src/mcts/data_handler.cpp include/mcts/data_item.h
 	@echo Compiling 'src/mcts/data_handler.cpp' ...
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/data_handler.cpp -o $@ 
 
-lib/error_handler.o: src/mcts/error_handler.cpp include/mcts/data_item.h 
+lib/error_handler.o: src/mcts/error_handler.cpp 
 	@echo Compiling 'src/mcts/error_handler.cpp' ...
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/error_handler.cpp -o $@ 
 
 lib/info_handler.o: src/mcts/info_handler.cpp include/mcts/data_item.h 
 	@echo Compiling 'src/mcts/info_handler.cpp' ...
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/info_handler.cpp -o $@ 
+
+lib/metrics_handler.o: src/mcts/metrics_handler.cpp
+	@echo Compiling 'src/mcts/metrics_handler.cpp' ...
+	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/metrics_handler.cpp -o $@ 
 
 lib/data_item.o: src/mcts/data_item.cpp 
 	@echo Compiling 'src/mcts/data_item.cpp' ...
@@ -58,6 +64,7 @@ lib/libstreams.spl.multiconnection.tcp.server.so: \
 	lib/data_handler.o \
 	lib/error_handler.o \
 	lib/info_handler.o \
+	lib/metrics_handler.o \
 	lib/io_service_pool.o 
 	@echo Building C++ shared library '$@'
 	@g++ -shared -o $@ $^		
