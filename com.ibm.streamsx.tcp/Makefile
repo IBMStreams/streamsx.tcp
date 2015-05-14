@@ -6,14 +6,22 @@
 all: mctsLib
 	spl-make-toolkit -m -i .
 	
-clean:
+clean: cleanspldoc
 	cd impl; make clean
 	
 mctsLib:
 	cd impl; make all
 	
 mctsLibClean:
-	cd impl; make clean	
+	cd impl; make clean
+
+spldoc:
+	spl-make-doc -i .
+	
+cleanspldoc:
+	cd doc; rm -R spldoc		
+	
+		
 	
 	
 	
