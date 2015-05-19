@@ -2,10 +2,21 @@ namespace application ;
 
 use com.ibm.streamsx.tcp::* ;
 
+/** TcpServerDuplex sample demonstrates how to enable full-duplex support on the TCPServer operator.
+ * Data is encoded as rstring in this sample
+ */
 composite TcpServerDuplex
 {
 	graph
-		stream<TcpServerStrT> Result1 = TCPServer(Functor_3_out0 as inPort0Alias)
+		// Start the TCP server at local host and port 2222.
+		// Clients are expected to connect to the TCPServer.  Data received from the TCP connection will be
+		// converted to tuples and send to downstream operators for analysis.
+		// 
+		// This operator enables full-duplex support by having an input port.  Data received on the input
+		// port will be sent to remote host via one of the existing TCP connections previously established.
+		// The destination is defined by the srcIP and srcPort attributes on the input stream.
+		//
+		stream<TcpServerStrT> TcpServerOp = TCPServer(Functor_3_out0 as inPort0Alias)
 		{
 			param
 				port : 22222u ;
@@ -14,7 +25,7 @@ composite TcpServerDuplex
 				keepAlive : { time = 7200u, probes = 5u, interval = 100u } ;
 		}
 
-		() as Sink1 = FileSink(Result1)
+		() as Sink1 = FileSink(TcpServerOp)
 		{
 			param
 				file : "Result1.txt" ;
@@ -22,10 +33,10 @@ composite TcpServerDuplex
 				quoteStrings : false ;
 		}
 
-		(stream<TcpServerStrT> Functor_3_out0) as Functor_3 = Functor(Result1)
+		(stream<TcpServerStrT> Functor_3_out0) as Functor_3 = Functor(TcpServerOp)
 		{
-//			output
-//				Functor_3_out0: txt = line;
+			output
+				Functor_3_out0: line = "Response: " + line + "\n";
 		}
 
 }
