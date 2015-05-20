@@ -190,7 +190,7 @@ void MY_OPERATOR::handleWrite(SPL::blob & raw, std::string const & ipAddress, ui
 void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port)
 {
 	if (e) {
-		// Put error handling here: error log, submit tuple and etc.
+		SPLAPPTRC(L_ERROR, "Unable to send data to " << ipAddress << ":" << port, "TCPServer");
 	}
 }
 
