@@ -9,19 +9,27 @@
   <cppOperatorModel>
     <context>
       <description>
-The `TCPServer` is a multi-connection, multi-threaded source operator that can accept data from one or more TCP sockets. An instance of the `TCPServer` operator will listen for connections on the port number defined by its port parameter. A single instance of the operator can process multiple connections simultaneously (up to the value specified in the connectionCap parameter). Each line or block of data received from an external source is converted by the `TCPServer` operator to a Streams tuple.
+The `TCPServer` is a multi-connection, multi-threaded full-duplex TCP operator that can accept data from one or more TCP sockets and send data back via the same socket connections.
+An instance of the `TCPServer` operator will listen for connections on the port number defined by its port parameter. 
+A single instance of the operator can process multiple connections simultaneously (up to the value specified in the connectionCap parameter). 
+Each line or block of data received from an external source is converted by the `TCPServer` operator to a Streams tuple.
+
+To enable duplex support, add an input port to the operator.  The schema of the input port must be of type `TCPServerStrT` or `TCPServerBlobT` or equivalent.
+The first attribute of the schema represents the data to send.  The `srcIP` and `srcPort` attributes represent the server and port to send the data to.
+When a tuple is received on the input port, the data will be sent asynchronously via an existing socket connection.  If an error occurs, the error will be logged.
+
 
 A few important details about the TCPServer operator to be aware of:
 
  * By default, an instance of the TCPServer operator will listen for connections only on the network interface that is bound to the resolvable IP address for the hostname of the machine where this operator is running and on the port number defined by its `port` operator parameter. When trying to connect to the TCPServer operator from client applications, you must use the value configured in the `address` operator parameter. If the optional `address` operator parameter is not used as part of the TCPServer operator invocation, then the client applications  must use the actual IP address or a fully qualified name of the TCPServer machine to connect to a TCPServer operator instance. 
  * If you have used an older version of the  MultiConnectionTCPServer toolkit, please note that moving to a newer version of this toolkit (i.e. version 1.0.3 or higher) will not provide backward compatibility. Because in the newer version, operator parameter syntax and the input/output stream specifications have been changed for this operator. If you are an existing user of this toolkit who is planning to use a newer version, you are advised to thoroughly read the operator invocation syntax below to understand the new features.
  
-#Exceptions
+ # Exceptions
  
 The TCPServer operator throws an exception and terminates the operator in the following cases:
     * Unable to bind to port.       
     
-#Examples
+ # Examples
 
     // TCPServer with two threads, accepts a maximum of 4 connections
 
@@ -115,7 +123,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
       <metrics>
         <metric>
           <name>nInboundConnections</name>
-          <description/>
+          <description>Number of inbound connections connected to the `TCPServer` operator.</description>
           <kind>Gauge</kind>
         </metric>
       </metrics>
@@ -181,9 +189,9 @@ The TCPServer operator throws an exception and terminates the operator in the fo
         <name>keepAlive</name>
         <description>This parameter is optional and it controls the internal behavior of the TCPServer operator in case of idle or broken connections. This parameter prevents a server from hanging on a connection when it drops, and it keeps a connection live when there is no normal activity. The value of the parameter is a tuple literal that specifies the configurable attributes. If any of the configurable attribute values for a specific keepAlive parameter is set to zero, the default system value of the keepAlive parameter is used. The configurable attributes for this parameter include:
 
-    * uint32 time: The number of seconds that the connection sits idle before a keepalive probe is sent.
-    * uint32 probes: The maximum number of probes to send to establish the state of the connection.
-    * uint32 interval: The time interval in seconds between each probe.
+* uint32 time: The number of seconds that the connection sits idle before a keepalive probe is sent.
+* uint32 probes: The maximum number of probes to send to establish the state of the connection.
+* uint32 interval: The time interval in seconds between each probe.
 </description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
@@ -229,11 +237,11 @@ The `TCPServer` operator has one optional input port.  The schema of the input p
 The first output port is mandatory and must contain a tuple with one mandatory and up to two optional attributes. The output port punctuation mode is Generating. The TCPServer operator outputs a window marker punctuation when an existing connection is released. The mandatory attribute must have type rstring (for line attribute) or blob (for block attribute).
 
 * mandatory
-    * attribute name line and type rstringor
-    * attribute name block and type blob
+  * attribute name line and type rstringor
+  * attribute name block and type blob
 * optional
-    * attribute name srcIP and type rstring
-    * attribute name srcPort and type uint32
+  * attribute name srcIP and type rstring
+  * attribute name srcPort and type uint32
 
 This output stream will carry tuples depending on the mandatory attribute used: 
 
