@@ -15,10 +15,10 @@
 #include <streams_boost/shared_ptr.hpp>
 #include <streams_boost/thread/mutex.hpp>
 
+#include "mcts/async_data_item.h"
 #include "mcts/data_item.h"
 #include "mcts/connection.h"
 #include "mcts/data_handler.h"
-#include "mcts/error_handler.h"
 #include "mcts/info_handler.h"
 #include "mcts/metrics_handler.h"
 #include "mcts/io_service_pool.h"
@@ -43,15 +43,15 @@ namespace mcts
         /// @param handler that will send connection status infos
         TCPServer(std::string const & address, uint32_t port, 
                   std::size_t threadPoolSize, std::size_t maxConnections, uint32_t blockSize, outFormat_t outFormat,
-                  DataHandler::Handler dhandler, ErrorHandler::Handler eHandler, InfoHandler::Handler iHandler, MetricsHandler::Handler mHandler);
-        
+                  DataHandler::Handler dhandler, AsyncDataItem::Handler eHandler, InfoHandler::Handler iHandler, MetricsHandler::Handler mHandler);
+
         /// Set the keep alive socket options
         void setKeepAlive(int32_t time, int32_t probes, int32_t interval);
 
 
         /// Run the server's io_service loop
         void run();
-        
+
         /// Stop the server
         void stop();
         
@@ -96,7 +96,7 @@ namespace mcts
         DataHandler dataHandler_;
 
         /// The handler used to process the error messages.
-        ErrorHandler errorHandler_;
+        AsyncDataItem errorHandler_;
 
         /// The handler used to process the metrics.
         MetricsHandler metricsHandler_;

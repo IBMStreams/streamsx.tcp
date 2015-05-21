@@ -9,6 +9,7 @@
 
 #include <streams_boost/thread.hpp>
 #include <streams_boost/bind.hpp>
+#include <streams_boost/make_shared.hpp>
 #include <streams_boost/shared_ptr.hpp>
 #include <streams_boost/weak_ptr.hpp>
 #include <streams_boost/lexical_cast.hpp>
@@ -33,7 +34,7 @@ namespace mcts
                          uint32_t blockSize,
                          outFormat_t outFormat,
                          DataHandler::Handler dHandler,
-                         ErrorHandler::Handler eHandler,
+                         AsyncDataItem::Handler eHandler,
                          InfoHandler::Handler iHandler,
                          MetricsHandler::Handler mHandler)
         : threadPoolSize_(threadPoolSize),
@@ -162,9 +163,9 @@ namespace mcts
 
     	{
 			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-				streams_boost::mutex::scoped_lock conn_scoped_lock(mutex_);
+				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
 			#else
-				streams_boost::unique_lock<streams_boost::mutex> conn_scoped_lock(mutex_);
+				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
 			#endif
 
 			connExist = connMap_.count(connKey.str()) != 0;
@@ -173,37 +174,55 @@ namespace mcts
     	}
 
     	if(connExist) {
-			if(TCPConnectionPtr connPtr = connWeakPtr.lock()) {
 
-				if (connPtr->socket().is_open()) {
+    		AsyncDataItemPtr asyncDataItemPtr = streams_boost::make_shared<AsyncDataItem>(errorHandler_);
+    		asyncDataItemPtr->setConnectionPtr(connWeakPtr);
+    		TCPConnectionPtr connPtr;
 
-					#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-						streams_boost::mutex::scoped_lock data_scoped_lock(connPtr->mutex_);
-					#else
-						streams_boost::unique_lock<streams_boost::mutex> data_scoped_lock(connPtr->mutex_);
-					#endif
+    		/// Validate existing connection
+			if (asyncDataItemPtr->getValidConnection(connPtr)) {
 
-					uint64_t size = raw.getSize();
-					if(raw.ownsData()) {
-						connPtr->bufferToSend_.adoptData(raw.releaseData(size), size);
-					}
-					else {
-						connPtr->bufferToSend_.adoptData(const_cast<unsigned char *>(raw.getData()), size);
-					}
+				asyncDataItemPtr->setData(raw);
 
-					async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_.getData(), size),
-							streams_boost::bind(&ErrorHandler::handleError, errorHandler_,
-												streams_boost::asio::placeholders::error,
-												ipAddress, port));
+				async_write(connPtr->socket(), streams_boost::asio::buffer(asyncDataItemPtr->getData(), asyncDataItemPtr->getSize()),
+						streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+											streams_boost::asio::placeholders::error,
+											ipAddress, port));
 
-					return;
-				}
+				return;
 			}
 
+//			if(TCPConnectionPtr connPtr = connWeakPtr.lock()) {
+//
+//				if (connPtr->socket().is_open()) {
+//
+//					#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+//						streams_boost::mutex::scoped_lock data_scoped_lock(connPtr->mutex_);
+//					#else
+//						streams_boost::unique_lock<streams_boost::mutex> data_scoped_lock(connPtr->mutex_);
+//					#endif
+//
+//					uint64_t size = raw.getSize();
+//					if(raw.ownsData()) {
+//						connPtr->bufferToSend_.adoptData(raw.releaseData(size), size);
+//					}
+//					else {
+//						connPtr->bufferToSend_.adoptData(const_cast<unsigned char *>(raw.getData()), size);
+//					}
+//
+//					async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_.getData(), size),
+//							streams_boost::bind(&ErrorHandler::handleError, errorHandler_,
+//												streams_boost::asio::placeholders::error,
+//												ipAddress, port));
+//
+//					return;
+//				}
+//			}
+
 			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-				streams_boost::mutex::scoped_lock conn_scoped_lock(mutex_);
+				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
 			#else
-				streams_boost::unique_lock<streams_boost::mutex> conn_scoped_lock(mutex_);
+				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
 			#endif
 
 			connMap_.erase(connKey.str());
@@ -219,9 +238,9 @@ namespace mcts
 			connKey << connTmpPtr->remoteIp() << ":" << connTmpPtr->remotePort();
 
 			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-				streams_boost::mutex::scoped_lock conn_scoped_lock(mutex_);
+				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
 			#else
-				streams_boost::unique_lock<streams_boost::mutex> conn_scoped_lock(mutex_);
+				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
 			#endif
 
 			connMap_[connKey.str()] = connPtr;

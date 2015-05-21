@@ -20,7 +20,7 @@
 #include <streams_boost/function.hpp>
 #include <streams_boost/thread/mutex.hpp>
 
-#include <SPL/Runtime/Type/Blob.h>
+//#include <SPL/Runtime/Type/Blob.h>
 
 namespace mcts 
 {
@@ -56,12 +56,6 @@ namespace mcts
 
         /// Start the first asynchronous operation for the connection.
         void start();
-
-        /// Buffer for outgoing data.
-//        streams_boost::array<char, streams_boost::asio::detail::default_max_transfer_size> bufferToSend_;
-        SPL::blob bufferToSend_;
-
-        streams_boost::mutex mutex_;
 
     private:
         /// Handle completion of a read operation.
