@@ -185,9 +185,16 @@ namespace mcts
 				asyncDataItemPtr->setData(raw);
 
 				async_write(connPtr->socket(), streams_boost::asio::buffer(asyncDataItemPtr->getData(), asyncDataItemPtr->getSize()),
-						streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
-											streams_boost::asio::placeholders::error,
-											ipAddress, port));
+						connPtr->strand().wrap(
+							streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+												streams_boost::asio::placeholders::error,
+												ipAddress, port)
+						)
+				);
+//				async_write(connPtr->socket(), streams_boost::asio::buffer(asyncDataItemPtr->getData(), asyncDataItemPtr->getSize()),
+//						streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+//											streams_boost::asio::placeholders::error,
+//											ipAddress, port));
 
 				return;
 			}

@@ -54,6 +54,9 @@ namespace mcts
         /// Get the socket associated with the connection.
         streams_boost::asio::ip::tcp::socket & socket();
 
+        /// Get the strand associated with the connection.
+        streams_boost::asio::io_service::strand & strand();
+
         /// Start the first asynchronous operation for the connection.
         void start();
 
@@ -64,6 +67,9 @@ namespace mcts
         
         /// Socket for the connection.
         streams_boost::asio::ip::tcp::socket socket_;
+
+        /// Strand for the connection (allows to serialize access to sockets from multiple threads).
+        streams_boost::asio::io_service::strand strand_;
 
         /// The handler used to process the incoming request.
         DataHandler & dataHandler_;

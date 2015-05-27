@@ -19,10 +19,11 @@
 namespace mcts 
 {
     uint32_t TCPConnection::numConnections_ = 0;
-    
+
     TCPConnection::TCPConnection(streams_boost::asio::io_service & ioService, uint32_t blockSize, outFormat_t outFormat,
     						DataHandler & dHandler, InfoHandler & iHandler)
         : socket_(ioService),
+          strand_(ioService),
           dataHandler_(dHandler),
           infoHandler_(iHandler),
           remoteIp_(""), // initialize with empty string
@@ -63,6 +64,11 @@ namespace mcts
     streams_boost::asio::ip::tcp::socket & TCPConnection::socket()
     {
         return socket_;
+    }
+
+    streams_boost::asio::io_service::strand & TCPConnection::strand()
+    {
+        return strand_;
     }
 
     void TCPConnection::start()
