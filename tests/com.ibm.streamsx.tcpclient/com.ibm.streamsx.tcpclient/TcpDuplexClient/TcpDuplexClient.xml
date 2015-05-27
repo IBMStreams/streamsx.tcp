@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<operatorModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ibm.com/xmlns/prod/streams/spl/operator" xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
+  <javaOperatorModel>
+    <context>
+      <description>Java Operator TcpDuplexClient</description>
+      <executionSettings>
+        <className>com.ibm.streamsx.tcpclient.TcpDuplexClient</className>
+      </executionSettings>
+      <libraryDependencies>
+        <library>
+          <cmn:description>Java operator class library</cmn:description>
+          <cmn:managedLibrary>
+            <cmn:libPath>../../impl/java/bin</cmn:libPath>
+          </cmn:managedLibrary>
+        </library>
+      </libraryDependencies>
+    </context>
+    <parameters>
+      <description></description>
+      <parameter>
+        <name>host</name>
+        <description></description>
+        <optional>false</optional>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>port</name>
+        <description></description>
+        <optional>false</optional>
+        <type>int32</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>readResponse</name>
+        <description/>
+        <optional>true</optional>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
+      </parameter>
+    </parameters>
+    <inputPorts>
+      <inputPortSet>
+        <description>Port that ingests tuples</description>
+        <windowingMode>NonWindowed</windowingMode>
+        <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+        <cardinality>1</cardinality>
+        <optional>false</optional>
+      </inputPortSet>
+      <inputPortOpenSet>
+        <windowingMode>NonWindowed</windowingMode>
+        <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+      </inputPortOpenSet>
+    </inputPorts>
+    <outputPorts>
+      <outputPortSet>
+        <description>Port that produces tuples</description>
+        <windowPunctuationOutputMode>Generating</windowPunctuationOutputMode>
+        <windowPunctuationInputPort>-1</windowPunctuationInputPort>
+        <cardinality>1</cardinality>
+        <optional>false</optional>
+      </outputPortSet>
+      <outputPortOpenSet>
+        <windowPunctuationOutputMode>Generating</windowPunctuationOutputMode>
+        <windowPunctuationInputPort>-1</windowPunctuationInputPort>
+      </outputPortOpenSet>
+    </outputPorts>
+  </javaOperatorModel>
+</operatorModel>

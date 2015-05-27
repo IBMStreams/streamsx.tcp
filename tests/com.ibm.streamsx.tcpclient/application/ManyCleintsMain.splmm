@@ -1,0 +1,82 @@
+/*
+ Copyright (C)2015 International Business Machines Corporation and
+ others. All Rights Reserved.
+*/
+
+<% # Switch to Perl scripting mode
+	use integer;
+	print "// Perl Arguments in effect for mixed-mode processing\n";
+	my $argCnt = @ARGV;
+	print "// Argument count: ", $argCnt, "\n";
+	my $argIdx;
+	for ($argIdx = 0; $argIdx < $argCnt; $argIdx++) {
+		print "// \$ARGV\[", $argIdx, "\]\:", $ARGV[$argIdx], "\n";
+	}
+	
+	my $numClients = $ARGV[0];
+  	unless(defined($numClients) and $numClients>0) {
+    print STDERR "ERROR: Please specify the number ",
+                 "of clients (a positive number).\n";
+    exit 1;
+  } 
+%>
+namespace application;
+
+use com.ibm.streamsx.tcpclient::* ;
+
+composite ManyClientsMain {
+	param
+		expression<rstring> $host:"d0101b09";
+		expression<int32> $port:22222;
+		expression<uint32> $numIter:1000000u;
+		expression<float64> $period:0.0005;
+
+	graph
+	<%  for(my $i=0; $i<$numClients; ++$i) {%>
+		(stream<rstring line> Beacon_1_out0_<%=$i%>) = Custom()
+		{
+			logic 
+				
+				onProcess :
+				{
+					mutable uint32 cnt = 0u ;
+					while(cnt < $numIter)
+					{
+						submit({ line = getRequest("<%=$i%>") + "\n" }, Beacon_1_out0_<%=$i%>) ;
+						cnt ++ ;
+						block($period) ;
+					}
+
+					while(! isShutdown())
+					{
+						spl.utility::block(1000.0) ;
+					}
+
+				}
+		}
+		(stream<rstring line> TcpDuplexClient_2_out0_<%=$i%>)  = TcpDuplexClient(Beacon_1_out0_<%=$i%>)
+		{
+			param 
+				host:$host;
+				port:$port;
+		}
+		() as Expected_<%=$i%>  = FileSink(Beacon_1_out0_<%=$i%>)
+		{
+			param 
+				file:"response_<%=$i%>.exp";
+				flush:1u;
+		}
+		(stream<rstring line> Functor_5_out0_<%=$i%>)  = Functor(TcpDuplexClient_2_out0_<%=$i%>)
+		{
+			output 
+				Functor_5_out0_<%=$i%>:line=line + "\n";
+		}
+		() as Response_<%=$i%>  = FileSink(Functor_5_out0_<%=$i%> as inPort0Alias)
+		{
+			param 
+				file:"responses_<%=$i%>.act";
+				flush:1u;
+		}
+		<%  }%>
+
+}
