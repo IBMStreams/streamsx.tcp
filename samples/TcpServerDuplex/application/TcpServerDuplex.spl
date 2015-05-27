@@ -2,6 +2,11 @@ namespace application ;
 
 use com.ibm.streamsx.tcp::* ;
 
+rstring getResponse()
+{
+	return "468694e1-3d76-41b6-874f-589c9de44fc1--1430897490283|llanos.venegar72@att.net@slid.dum|SLID|142084907|UVerse|ATTCOM|DESKTOP|PG1001|IS1001|53365aa38fabd40ba70a7112|100|OK|IS1002|53365aa38fabd40ba70a7101|100|OK|IS1003|54ef567798e6b8749a0448da|100|OK|IS1013|53bea2728fabd40ba70a737b|100|OK|IS1014|53365aa38fabd40ba70a7111|100|OK|IS1015|53365aa38fabd40ba70a7105|100|OK|IS1070|5514e93798e6b8749a044d96|100|OK|IS1071|5514e93898e6b8749a044da6|100|OK|IS1072|5514e93798e6b8749a044d9d|100|OK|IS1076|5514e93798e6b8749a044d94|100|OK|IS1077|5514e93798e6b8749a044d9b|100|OK|IS1078|5514e93898e6b8749a044da8|100|OK";
+}
+
 /** TcpServerDuplex sample demonstrates how to enable full-duplex support on the TCPServer operator.
  * Data is encoded as rstring in this sample
  */
@@ -25,18 +30,23 @@ composite TcpServerDuplex
 				keepAlive : { time = 7200u, probes = 5u, interval = 100u } ;
 		}
 
-		() as Sink1 = FileSink(TcpServerOp)
+		() as Sink1 = Custom(TcpServerOp)
 		{
-			param
-				file : "Result1.txt" ;
-				flush : 1u ;
-				quoteStrings : false ;
+			logic onTuple TcpServerOp: {
+				printStringLn((rstring)TcpServerOp);
+			}
 		}
 
 		(stream<TcpServerStrT> Functor_3_out0) as Functor_3 = Functor(TcpServerOp)
 		{
+			logic
+				state: {mutable uint64 cnt=0;}
+				onTuple TcpServerOp: {
+					cnt ++;
+				}
 			output
-				Functor_3_out0: line = "Response: " + line + "\n";
+				//Functor_3_out0: line = "Response: " + (rstring) cnt + "|"  + getResponse() + "\n";
+				Functor_3_out0: line = line + "\n";
 		}
 
 }
