@@ -191,40 +191,9 @@ namespace mcts
 												ipAddress, port)
 						)
 				);
-//				async_write(connPtr->socket(), streams_boost::asio::buffer(asyncDataItemPtr->getData(), asyncDataItemPtr->getSize()),
-//						streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
-//											streams_boost::asio::placeholders::error,
-//											ipAddress, port));
 
 				return;
 			}
-
-//			if(TCPConnectionPtr connPtr = connWeakPtr.lock()) {
-//
-//				if (connPtr->socket().is_open()) {
-//
-//					#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-//						streams_boost::mutex::scoped_lock data_scoped_lock(connPtr->mutex_);
-//					#else
-//						streams_boost::unique_lock<streams_boost::mutex> data_scoped_lock(connPtr->mutex_);
-//					#endif
-//
-//					uint64_t size = raw.getSize();
-//					if(raw.ownsData()) {
-//						connPtr->bufferToSend_.adoptData(raw.releaseData(size), size);
-//					}
-//					else {
-//						connPtr->bufferToSend_.adoptData(const_cast<unsigned char *>(raw.getData()), size);
-//					}
-//
-//					async_write(connPtr->socket(), streams_boost::asio::buffer(connPtr->bufferToSend_.getData(), size),
-//							streams_boost::bind(&ErrorHandler::handleError, errorHandler_,
-//												streams_boost::asio::placeholders::error,
-//												ipAddress, port));
-//
-//					return;
-//				}
-//			}
 
 			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
 				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
