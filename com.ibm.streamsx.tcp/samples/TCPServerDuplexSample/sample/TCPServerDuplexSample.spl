@@ -10,29 +10,31 @@ graph
 				threadPoolSize : 2u ;
 				connectionCap : 5u ;
 				keepAlive : { time = 7200u, probes = 5u, interval = 100u } ;
-				address : "9.148.58.232" ;
+				address : "9.148.58.80" ;
 	}
 	
-//	stream<blob block, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
-	stream<rstring line, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
+	stream<blob block, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
+//	stream<rstring line, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
         output
             Response :
 //            	block = convertToBlob("This is a response for: " + line + "\n"),
 //            	line = "This is a first response for: " + line + "\n",
-            	line = convertFromBlob((blob)makeSequence(48ub, 100000, 0ub)) + "\n",
+            	block = (blob)makeSequence(48ub, 1000, 0ub),
+//            	line = convertFromBlob((blob)makeSequence(48ub, 100000, 0ub)) + "\n",
             	srcIP = srcIP,
             	srcPort = srcPort;
         config
         	threadedPort : queue(Request, Sys.Wait);
     }
 	
-//	stream<blob block, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
-	stream<rstring line, rstring srcIP, uint32 srcPort> Response2 = Functor(Request) {
+	stream<blob block, rstring srcIP, uint32 srcPort> Response2 = Functor(Request) {
+//	stream<rstring line, rstring srcIP, uint32 srcPort> Response2 = Functor(Request) {
         output
             Response2 :
 //            	block = convertToBlob("This is a response for: " + line + "\n"),
 //            	line = "This is a second response for: " + line + "\n",
-            	line = convertFromBlob((blob)makeSequence(49ub, 100000, 0ub)) + "\n",
+            	block = (blob)makeSequence(49ub, 1000, 0ub),
+//            	line = convertFromBlob((blob)makeSequence(49ub, 100000, 0ub)) + "\n",
             	srcIP = srcIP,
             	srcPort = srcPort;
         config

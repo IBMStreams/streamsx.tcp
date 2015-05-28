@@ -8,10 +8,14 @@
 #ifndef MULTI_CONNECTION_TCP_SERVER_ASYNC_DATA_ITEM
 #define MULTI_CONNECTION_TCP_SERVER_ASYNC_DATA_ITEM
 
-#include <streams_boost/system/error_code.hpp>
+#include <streams_boost/asio.hpp>
+#include <streams_boost/array.hpp>
 #include <streams_boost/function.hpp>
+#include <streams_boost/system/error_code.hpp>
 
 #include "mcts/connection.h"
+
+#include <SPL/Runtime/Serialization/NetworkByteBuffer.h>
 #include <SPL/Runtime/Type/Blob.h>
 
 namespace mcts 
@@ -32,20 +36,29 @@ namespace mcts
         /// Return valid connection.
         void setConnectionPtr(TCPConnectionWeakPtr const & connWeakPtr);
 
-        /// Get a pointer to the buffer.
-        unsigned char const * getData();
+        /// Get a buffer to string.
+        streams_boost::asio::const_buffers_1 getBuffer();
+
+        /// Get an array of buffers to blob size and blob data.
+        streams_boost::array<streams_boost::asio::const_buffer, 2> getBuffers();
 
         /// Get a pointer to the buffer.
-        uint64_t getSize();
+//        unsigned char const * getData();
+
+        /// Get a pointer to the buffer.
+//        uint64_t getSize();
 
         /// Adopt blob data to the buffer (no copy).
-        void setData(SPL::blob & raw);
+        void setData(SPL::blob & raw, bool delimited);
 
         void handleError(streams_boost::system::error_code const & e, std::string const & ip, uint32_t port);
 
     private:
         /// Reference to bounded connection.
         TCPConnectionWeakPtr connWeakPtr_;
+
+        /// The unique buffer size to prepend to the data.
+        SPL::NetworkByteBuffer bufferSize_;
 
         /// The unique buffer to send the data.
         SPL::blob buffer_;

@@ -182,15 +182,25 @@ namespace mcts
     		/// Validate existing connection
 			if (asyncDataItemPtr->getValidConnection(connPtr)) {
 
-				asyncDataItemPtr->setData(raw);
+				asyncDataItemPtr->setData(raw, delimited);
 
-				async_write(connPtr->socket(), streams_boost::asio::buffer(asyncDataItemPtr->getData(), asyncDataItemPtr->getSize()),
-						connPtr->strand().wrap(
-							streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
-												streams_boost::asio::placeholders::error,
-												ipAddress, port)
-						)
-				);
+				if(delimited) {
+//					async_write(connPtr->socket(), streams_boost::asio::buffer(asyncDataItemPtr->getData(), asyncDataItemPtr->getSize()),
+					async_write(connPtr->socket(), asyncDataItemPtr->getBuffer(),
+							connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+													streams_boost::asio::placeholders::error,
+													ipAddress, port)
+							)
+					);
+				}
+				else {
+					async_write(connPtr->socket(), asyncDataItemPtr->getBuffers(),
+							connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+													streams_boost::asio::placeholders::error,
+													ipAddress, port)
+							)
+					);
+				}
 
 				return;
 			}

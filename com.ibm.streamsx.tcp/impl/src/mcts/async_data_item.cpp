@@ -10,7 +10,7 @@
 namespace mcts 
 {
 
-	AsyncDataItem::AsyncDataItem(Handler handler) : handler_(handler) {}
+	AsyncDataItem::AsyncDataItem(Handler handler) : bufferSize_(sizeof(uint64_t)), handler_(handler) {}
 
 	bool AsyncDataItem::getValidConnection(TCPConnectionPtr & connPtr)
 	{
@@ -26,19 +26,41 @@ namespace mcts
     	connWeakPtr_ = connWeakPtr;
     }
 
-	unsigned char const *  AsyncDataItem::getData()
-	{
-		return buffer_.getData();
-	}
+    streams_boost::asio::const_buffers_1 AsyncDataItem::getBuffer()
+    {
+    	return streams_boost::asio::buffer(buffer_.getData(), buffer_.getSize());
+    }
 
-	uint64_t AsyncDataItem::getSize()
-	{
-		return buffer_.getSize();
-	}
+    streams_boost::array<streams_boost::asio::const_buffer, 2> AsyncDataItem::getBuffers()
+    {
+    	streams_boost::array<streams_boost::asio::const_buffer, 2> buffers =
+    	{{
+			streams_boost::asio::buffer(bufferSize_.getPtr(), sizeof(uint64_t)),
+			streams_boost::asio::buffer(buffer_.getData(), buffer_.getSize())
+    	}};
 
-	void AsyncDataItem::setData(SPL::blob & raw)
+    	return buffers;
+    }
+
+//	unsigned char const *  AsyncDataItem::getData()
+//	{
+//		return buffer_.getData();
+//	}
+//
+//	uint64_t AsyncDataItem::getSize()
+//	{
+//		return buffer_.getSize();
+//	}
+
+	void AsyncDataItem::setData(SPL::blob & raw, bool delimited)
 	{
 		uint64_t size = raw.getSize();
+
+		if(!delimited) {
+			bufferSize_.setOCursor(0);
+			bufferSize_.addUInt64(size);
+		}
+
 		if(raw.ownsData()) {
 			buffer_.adoptData(raw.releaseData(size), size);
 		}

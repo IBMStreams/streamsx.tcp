@@ -176,7 +176,7 @@ void MY_OPERATOR::handleInfo(std::string const & status, std::string const & ipA
     <%}%>
 }
 
-void MY_OPERATOR::handleWrite(std::string & line, std::string const & ipAddress, uint32_t port)
+void MY_OPERATOR::handleWrite(std::string const & line, std::string const & ipAddress, uint32_t port)
 {
 	SPL::blob raw(reinterpret_cast<unsigned char const *>(line.data()), line.size());	
 	if (!streams_boost::algorithm::ends_with(line, "\n")){
@@ -185,9 +185,9 @@ void MY_OPERATOR::handleWrite(std::string & line, std::string const & ipAddress,
 	server_.handleWrite(raw, true, ipAddress, port);
 }
 
-void MY_OPERATOR::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
+void MY_OPERATOR::handleWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port)
 {
-	server_.handleWrite(raw, false, ipAddress, port);
+	server_.handleWrite(const_cast<SPL::blob &>(raw), false, ipAddress, port);
 }
 
 void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port)
@@ -223,13 +223,13 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 	// if data is rstring, call handleWrite(string, ipAddress, port)	
 	<%if ($iport0->getAttributeByName("line")){%>
 		
-		std::string line = t.get_line();
-		handleWrite((std::string&)line, destIp, destPort);
+		std::string const & line = t.get_line();
+		handleWrite(line, destIp, destPort);
 		
 	// else if idata is a blob, call handleWrite(blob, ipAddress, port)		
 	<%}else{%>
 		
-		SPL::blob block = t.get_block();
+		SPL::blob const & block = t.get_block();
 		handleWrite(block, destIp, destPort);
 	<%}%>
 	<%}%>
