@@ -42,7 +42,8 @@ namespace mcts
         /// @param handler that will process the data 
         /// @param handler that will send connection status infos
         TCPServer(std::string const & address, uint32_t port, 
-                  std::size_t threadPoolSize, std::size_t maxConnections, uint32_t blockSize, outFormat_t outFormat,
+                  std::size_t threadPoolSize, std::size_t maxConnections, std::size_t maxUnreadResponseCount,
+                  uint32_t blockSize, outFormat_t outFormat, bool isDuplexConnection,
                   DataHandler::Handler dhandler, AsyncDataItem::Handler eHandler, InfoHandler::Handler iHandler, MetricsHandler::Handler mHandler);
 
         /// Set the keep alive socket options
@@ -70,6 +71,9 @@ namespace mcts
 
         /// The number of concurrent connections allowed
         std::size_t maxConnections_;
+
+        /// The number of unread responses until the duplex connection is disabled (becomes read only)
+        std::size_t maxUnreadResponseCount_;
 
         /// The maximum size of receive buffer, flush buffer in case of overflow
         uint32_t blockSize_;
@@ -103,6 +107,9 @@ namespace mcts
 
         /// The format output data: line (as rstring) or block (as blob)
         outFormat_t outFormat_;
+
+        /// The next connection to be accepted.
+        bool isDuplexConnection_;
 
         /// The next connection to be accepted.
         TCPConnectionPtr nextConnection_;

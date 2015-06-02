@@ -55,7 +55,13 @@ public:
 	void handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port);
 
 	// For handling metrics
-	void handleMetrics(int64_t nConn);
+	void handleMetrics(uint32_t kind, int64_t value);
+	
+	enum MetricKind
+	{
+	    N_CONNECTIONS,
+	    N_RESPONSES
+	};
 
 private:
     static __thread OPort0Type * otuple0_;

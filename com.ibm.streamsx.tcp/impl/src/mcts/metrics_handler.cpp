@@ -13,9 +13,9 @@ namespace mcts
     {
     }
 
-	void MetricsHandler::handleMetrics(int64_t nConn)
+	void MetricsHandler::handleMetrics(uint32_t kind, int64_t value)
     {
-            handler_( nConn);
+            handler_( kind, value);
     }
 
 }

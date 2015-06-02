@@ -44,6 +44,10 @@ using namespace SPL;
   # Apply default value for keepAlive.
   $keepAlive = $keepAlive ? $keepAlive->getValueAt(0)->getCppExpression() : "";
 
+  my $maxUnreadResponseCount = $model->getParameterByName("maxUnreadResponseCount");
+  # Apply default value for maxUnreadResponseCount.
+  $maxUnreadResponseCount = $maxUnreadResponseCount ? $maxUnreadResponseCount->getValueAt(0)->getCppExpression() : 100;
+
 	my $oport0 = $model->getOutputPortAt(0);
   	my $oport1 = $model->getOutputPortAt(1);
   	
@@ -76,11 +80,12 @@ __thread MY_OPERATOR::OPort1Type * MY_OPERATOR::otuple1_ = NULL;
 MY_OPERATOR::MY_OPERATOR()
     : server_(
               <%=$address%>, 
-              <%=$port%>, <%=$threadPoolSize%>, <%=$connectionCap%>, <%=$blockSize%>,  MY_OPERATOR::outFormat_,
+              <%=$port%>, <%=$threadPoolSize%>, <%=$connectionCap%>, <%=$maxUnreadResponseCount%>,
+              <%=$blockSize%>,  MY_OPERATOR::outFormat_, <%=defined($iport0) ? 'true' : 'false'%>,
               streams_boost::bind(&MY_OPERATOR::handleData, this, _1, _2, _3) ,
               streams_boost::bind(&MY_OPERATOR::handleError, this, _1, _2, _3) ,
               streams_boost::bind(&MY_OPERATOR::handleInfo, this, _1, _2, _3) ,
-              streams_boost::bind(&MY_OPERATOR::handleMetrics, this, _1)
+              streams_boost::bind(&MY_OPERATOR::handleMetrics, this, _1, _2)
               ),
 	  opm_(getContext().getMetrics())
 {
@@ -192,15 +197,24 @@ void MY_OPERATOR::handleWrite(SPL::blob const & raw, std::string const & ipAddre
 
 void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port)
 {
+//	SPLAPPTRC(L_ERROR, "Data is sent to " << ipAddress << ":" << port, "TCPServer");
 	if (e) {
-		SPLAPPTRC(L_ERROR, "Unable to send data to " << ipAddress << ":" << port, "TCPServer");
+		SPLAPPTRC(L_ERROR, "Unable to send data to " << ipAddress << ":" << port << "\n" << e.message(), "TCPServer");
+	}
+	else {
+		handleMetrics(1, 1);
 	}
 }
 
-void MY_OPERATOR::handleMetrics(int64_t nConn)
+void MY_OPERATOR::handleMetrics(uint32_t kind, int64_t value)
 {
-	Metric & nocMetric = opm_.getCustomMetricByName("nInboundConnections");
-	nocMetric.setValueNoLock(nConn);
+	switch(static_cast<MetricKind>(kind)) {
+		case N_CONNECTIONS:
+			opm_.getCustomMetricByName("nConnections").setValueNoLock(value);
+			break;
+		case N_RESPONSES:
+			opm_.getCustomMetricByName("nResponses").incrementValue();
+	}
 }
 
 

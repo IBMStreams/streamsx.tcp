@@ -31,14 +31,17 @@ namespace mcts
     TCPServer::TCPServer(std::string const & address, uint32_t port, 
                          std::size_t threadPoolSize,
                          std::size_t maxConnections,
+                         std::size_t maxUnreadResponseCount,
                          uint32_t blockSize,
                          outFormat_t outFormat,
+                         bool isDuplexConnection,
                          DataHandler::Handler dHandler,
                          AsyncDataItem::Handler eHandler,
                          InfoHandler::Handler iHandler,
                          MetricsHandler::Handler mHandler)
         : threadPoolSize_(threadPoolSize),
           maxConnections_(maxConnections),
+          maxUnreadResponseCount_(maxUnreadResponseCount),
           blockSize_(blockSize),
           keepAliveIdleTime_(0),
           keepAliveMaxProbesCnt_(0),
@@ -50,6 +53,7 @@ namespace mcts
           errorHandler_(eHandler),
           metricsHandler_(mHandler),
           outFormat_(outFormat),
+          isDuplexConnection_(isDuplexConnection),
     	nextConnection_(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
     {
     	streams_boost::asio::ip::tcp::resolver resolver(acceptor_.get_io_service());
@@ -104,10 +108,12 @@ namespace mcts
         	if (TCPConnection::getNumberOfConnections()<=maxConnections_) {
         		nextConnection_->start();
 
-        		// Add a new connection to the response connection map
-        		mapConnection(nextConnection_);
+        		// Add a new connection to the response connection map, but only if duplex communication is required
+        		if (isDuplexConnection_) {
+					mapConnection(nextConnection_);
+        		}
         		// Update number of open connections metric
-        		metricsHandler_.handleMetrics((int64_t)mcts::TCPConnection::getNumberOfConnections());
+        		metricsHandler_.handleMetrics(0, (int64_t)mcts::TCPConnection::getNumberOfConnections());
 
 
         		// Set the KeepAlive values as given by the user.
@@ -182,24 +188,33 @@ namespace mcts
     		/// Validate existing connection
 			if (asyncDataItemPtr->getValidConnection(connPtr)) {
 
-				asyncDataItemPtr->setData(raw, delimited);
+				uint32_t * numOutstandingWritesPtr = connPtr->getNumOutstandingWritesPtr();
 
-				if(delimited) {
-//					async_write(connPtr->socket(), streams_boost::asio::buffer(asyncDataItemPtr->getData(), asyncDataItemPtr->getSize()),
-					async_write(connPtr->socket(), asyncDataItemPtr->getBuffer(),
-							connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
-													streams_boost::asio::placeholders::error,
-													ipAddress, port)
-							)
-					);
+				/// Check if client consumes data from a socket
+				if (*numOutstandingWritesPtr <= maxUnreadResponseCount_) {
+					__sync_fetch_and_add(numOutstandingWritesPtr, 1);
+
+					asyncDataItemPtr->setData(raw, delimited);
+
+					if(delimited) {
+						async_write(connPtr->socket(), asyncDataItemPtr->getBuffer(),
+								connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+														streams_boost::asio::placeholders::error,
+														ipAddress, port)
+								)
+						);
+					}
+					else {
+						async_write(connPtr->socket(), asyncDataItemPtr->getBuffers(),
+								connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+														streams_boost::asio::placeholders::error,
+														ipAddress, port)
+								)
+						);
+					}
 				}
 				else {
-					async_write(connPtr->socket(), asyncDataItemPtr->getBuffers(),
-							connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
-													streams_boost::asio::placeholders::error,
-													ipAddress, port)
-							)
-					);
+					connPtr->shutdown_send_once();
 				}
 
 				return;

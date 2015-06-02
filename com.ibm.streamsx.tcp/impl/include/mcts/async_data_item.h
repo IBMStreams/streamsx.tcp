@@ -42,12 +42,6 @@ namespace mcts
         /// Get an array of buffers to blob size and blob data.
         streams_boost::array<streams_boost::asio::const_buffer, 2> getBuffers();
 
-        /// Get a pointer to the buffer.
-//        unsigned char const * getData();
-
-        /// Get a pointer to the buffer.
-//        uint64_t getSize();
-
         /// Adopt blob data to the buffer (no copy).
         void setData(SPL::blob & raw, bool delimited);
 

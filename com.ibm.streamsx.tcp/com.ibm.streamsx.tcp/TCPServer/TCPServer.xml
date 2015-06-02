@@ -122,9 +122,14 @@ The TCPServer operator throws an exception and terminates the operator in the fo
 </description>
       <metrics>
         <metric>
-          <name>nInboundConnections</name>
+          <name>nConnections</name>
           <description>Number of inbound connections connected to the `TCPServer` operator.</description>
           <kind>Gauge</kind>
+        </metric>
+        <metric>
+          <name>nResponses</name>
+          <description>Number of outcoming events.</description>
+          <kind>Counter</kind>
         </metric>
       </metrics>
       <customLiterals>
@@ -178,7 +183,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
       </parameter>
       <parameter>
         <name>connectionCap</name>
-        <description>This mandatory parameter with type uint32 specifies the maximum number of connections that can be established to a single instance of the TCPServer operator before it starts refusing additional connections.</description>
+        <description>This optional parameter with type uint32 specifies the maximum number of connections that can be established to a single instance of the TCPServer operator before it starts refusing additional connections.</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -215,6 +220,15 @@ The TCPServer operator throws an exception and terminates the operator in the fo
         <rewriteAllowed>false</rewriteAllowed>
         <expressionMode>CustomLiteral</expressionMode>
         <type>DataFormat</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>maxUnreadResponseCount</name>
+        <description>This optional parameter with type uint32 specifies the maximum number of unread responses until the duplex connection is disabled (becomes read only) .</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>uint32</type>
         <cardinality>1</cardinality>
       </parameter>
     </parameters>

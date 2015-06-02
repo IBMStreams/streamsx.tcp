@@ -51,6 +51,11 @@ namespace mcts
         }
     }
 
+    uint32_t * TCPConnection::getNumOutstandingWritesPtr()
+    {
+        return &numOutstandingWrites_;
+    }
+
     std::string & TCPConnection::remoteIp()
     {
         return remoteIp_;
@@ -82,6 +87,12 @@ namespace mcts
                                 streams_boost::bind(&TCPConnection::handleRead, shared_from_this(),
                                                     streams_boost::asio::placeholders::error,
                                                     streams_boost::asio::placeholders::bytes_transferred));
+    }
+
+    bool TCPConnection::shutdown_send_once()
+    {
+    	static bool shutdown_send_op = shutdown_send();
+    	return shutdown_send_op;
     }
 
     void TCPConnection::handleRead(streams_boost::system::error_code const & e,

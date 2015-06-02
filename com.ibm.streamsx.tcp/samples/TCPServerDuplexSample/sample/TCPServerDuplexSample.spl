@@ -4,22 +4,23 @@ use com.ibm.streamsx.tcp::*;
 
 composite TCPServerDuplexSample {
 graph
-	stream<rstring line, rstring srcIP, uint32 srcPort> Request = TCPServer(Response, Response2) {
+	stream<rstring line, rstring srcIP, uint32 srcPort> Request = TCPServer(Response) {
 		param
 	        port : 22222u;
-				threadPoolSize : 2u ;
-				connectionCap : 5u ;
+				threadPoolSize : 1u ;
+				connectionCap : 10u ;
 				keepAlive : { time = 7200u, probes = 5u, interval = 100u } ;
-				address : "9.148.58.80" ;
+//				address : "9.148.58.80" ;
 	}
 	
-	stream<blob block, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
-//	stream<rstring line, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
+//	stream<blob block, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
+	stream<rstring line, rstring srcIP, uint32 srcPort> Response = Functor(Request) {
         output
             Response :
 //            	block = convertToBlob("This is a response for: " + line + "\n"),
+            	line = "This is a response for: " + line + "\n",
 //            	line = "This is a first response for: " + line + "\n",
-            	block = (blob)makeSequence(48ub, 1000, 0ub),
+//            	block = (blob)makeSequence(48ub, 1000, 0ub),
 //            	line = convertFromBlob((blob)makeSequence(48ub, 100000, 0ub)) + "\n",
             	srcIP = srcIP,
             	srcPort = srcPort;
@@ -27,17 +28,17 @@ graph
         	threadedPort : queue(Request, Sys.Wait);
     }
 	
-	stream<blob block, rstring srcIP, uint32 srcPort> Response2 = Functor(Request) {
+//	stream<blob block, rstring srcIP, uint32 srcPort> Response2 = Functor(Request) {
 //	stream<rstring line, rstring srcIP, uint32 srcPort> Response2 = Functor(Request) {
-        output
-            Response2 :
-//            	block = convertToBlob("This is a response for: " + line + "\n"),
-//            	line = "This is a second response for: " + line + "\n",
-            	block = (blob)makeSequence(49ub, 1000, 0ub),
-//            	line = convertFromBlob((blob)makeSequence(49ub, 100000, 0ub)) + "\n",
-            	srcIP = srcIP,
-            	srcPort = srcPort;
-        config
-        	threadedPort : queue(Request, Sys.Wait);
-    }
+//        output
+//            Response2 :
+////            	block = convertToBlob("This is a response for: " + line + "\n"),
+////            	line = "This is a second response for: " + line + "\n",
+//            	block = (blob)makeSequence(49ub, 1000, 0ub),
+////            	line = convertFromBlob((blob)makeSequence(49ub, 100000, 0ub)) + "\n",
+//            	srcIP = srcIP,
+//            	srcPort = srcPort;
+//        config
+//        	threadedPort : queue(Request, Sys.Wait);
+//    }
 }

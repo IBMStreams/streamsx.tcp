@@ -18,9 +18,9 @@ namespace mcts
 	class MetricsHandler
     {
     public:
-        typedef streams_boost::function<void (int64_t nConn)> Handler;
+        typedef streams_boost::function<void (uint32_t kind, int64_t value)> Handler;
         MetricsHandler(Handler handler);
-        void handleMetrics(int64_t nConn);
+        void handleMetrics(uint32_t kind, int64_t value);
     private:
         Handler handler_;
     };

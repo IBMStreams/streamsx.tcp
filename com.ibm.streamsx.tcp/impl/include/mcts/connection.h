@@ -45,6 +45,9 @@ namespace mcts
             return numConnections_;
         }
 
+        /// Get the number of pending outstanding writes.
+        uint32_t * getNumOutstandingWritesPtr();
+
         /// Get the ip associated with the connection.
         std::string & remoteIp();
 
@@ -59,6 +62,16 @@ namespace mcts
 
         /// Start the first asynchronous operation for the connection.
         void start();
+
+        /// Shutdown sending operation for the connection.
+        inline bool shutdown_send()
+        {
+        	socket_.shutdown(streams_boost::asio::ip::tcp::socket::shutdown_send);
+        	return true;
+        }
+
+        /// Shutdown sending operation for the connection only once.
+        bool shutdown_send_once();
 
     private:
         /// Handle completion of a read operation.
@@ -96,6 +109,8 @@ namespace mcts
         outFormat_t outFormat_;
 
         static uint32_t numConnections_;
+
+        uint32_t numOutstandingWrites_;
 
     };
     
