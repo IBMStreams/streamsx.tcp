@@ -1,18 +1,137 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 #######################################################################
-# Copyright (C)2012, International Business Machines Corporation and  
+# Copyright (C)2012,2015 International Business Machines Corporation and  
 # others. All Rights Reserved.                                    
 #######################################################################  
 -->
-<operatorModel
-  xmlns="http://www.ibm.com/xmlns/prod/streams/spl/operator" 
-  xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" 
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
+<operatorModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ibm.com/xmlns/prod/streams/spl/operator" xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
   <cppOperatorModel>
     <context>
-      <description>A multi-connection, multi-threaded source operator.</description>
+      <description>
+The `TCPServer` is a multi-connection, multi-threaded full-duplex TCP operator that can accept data from one or more TCP sockets and send data back via the same socket connections.
+An instance of the `TCPServer` operator will listen for connections on the port number defined by its port parameter. 
+A single instance of the operator can process multiple connections simultaneously (up to the value specified in the connectionCap parameter). 
+Each line or block of data received from an external source is converted by the `TCPServer` operator to a Streams tuple.
+
+To enable duplex support, add an input port to the operator.  The schema of the input port must be of type `TCPServerStrT` or `TCPServerBlobT` or equivalent.
+The first attribute of the schema represents the data to send.  The `srcIP` and `srcPort` attributes represent the server and port to send the data to.
+When a tuple is received on the input port, the data will be sent asynchronously via an existing socket connection.  If an error occurs, the error will be logged.
+
+
+A few important details about the TCPServer operator to be aware of:
+
+ * By default, an instance of the TCPServer operator will listen for connections only on the network interface that is bound to the resolvable IP address for the hostname of the machine where this operator is running and on the port number defined by its `port` operator parameter. When trying to connect to the TCPServer operator from client applications, you must use the value configured in the `address` operator parameter. If the optional `address` operator parameter is not used as part of the TCPServer operator invocation, then the client applications  must use the actual IP address or a fully qualified name of the TCPServer machine to connect to a TCPServer operator instance. 
+ * If you have used an older version of the  MultiConnectionTCPServer toolkit, please note that moving to a newer version of this toolkit (i.e. version 1.0.3 or higher) will not provide backward compatibility. Because in the newer version, operator parameter syntax and the input/output stream specifications have been changed for this operator. If you are an existing user of this toolkit who is planning to use a newer version, you are advised to thoroughly read the operator invocation syntax below to understand the new features.
+ 
+ # Exceptions
+ 
+The TCPServer operator throws an exception and terminates the operator in the following cases:
+    * Unable to bind to port.       
+    
+ # Examples
+
+    // TCPServer with two threads, accepts a maximum of 4 connections
+
+    composite Main
+    {
+    graph
+        stream&lt;rstring line, rstring srcIP, uint32 srcPort> 
+            Result = TCPServer() {
+            param
+                port : 22222u;
+                threadPoolSize : 2u; 
+                connectionCap: 4u;
+        }
+        () as Sink = FileSink(Result) {
+            param
+                file: &quot;output&quot;;      
+                flush: 1u;
+        }
+    } 
+
+    // TCPServer with output as blob and optional 2nd output port
+    // TCPServer listen on &quot;localhost&quot;
+
+    composite Main
+    {
+    graph
+        (stream&lt;blob block> Result; stream&lt;rstring status, rstring srcIP, uint32 srcPort> Status)= TCPServer() {
+            param
+                port : 22222u;
+                threadPoolSize : 1u; 
+                connectionCap: 5u;
+                blockSize: 256u;
+                address: &quot;localhost&quot;;
+        }
+        () as ResultSink = FileSink(Result) {
+            param
+                file: &quot;result&quot;;      
+                flush: 1u;
+        }
+        () as StatusSink = FileSink(Status) {
+            param
+                file: &quot;status&quot;;      
+                flush: 1u;
+        }
+    } 
+
+    // TCPServer with output as rstring
+    // generates output tuples when &quot;\n&quot; is received.
+    // If there is no &quot;\n&quot;, it generates an output tuple after receiving 65535 bytes 
+
+    composite Main
+    {
+    graph
+        stream&lt;rstring line> 
+            Result = TCPServer() {
+            param
+                port : 22222u;
+                threadPoolSize : 1u; 
+                connectionCap: 5u;
+                blockSize: 65535u;
+        }
+        () as Sink = FileSink(Result) {
+            param
+                file: &quot;output&quot;;      
+                flush: 1u;
+        }
+    } 
+
+    // TCPServer with keepAlive for the TCP connections
+
+    composite Main
+    {
+    graph
+        stream&lt;rstring line> 
+            Result = TCPServer() {
+            param
+                port : 22222u;
+                threadPoolSize : 1u; 
+                connectionCap: 5u;
+                keepAlive: {time=7200u, probes=5u, interval=100u};
+         }
+        () as Sink = FileSink(Result) {
+            param
+                file: &quot;output&quot;;      
+                flush: 1u;
+        }
+    }
+
+    
+</description>
+      <metrics>
+        <metric>
+          <name>nConnections</name>
+          <description>Number of inbound connections connected to the `TCPServer` operator.</description>
+          <kind>Gauge</kind>
+        </metric>
+        <metric>
+          <name>nResponses</name>
+          <description>Number of outcoming events.</description>
+          <kind>Counter</kind>
+        </metric>
+      </metrics>
       <customLiterals>
         <enumeration>
           <name>DataFormat</name>
@@ -31,12 +150,13 @@
         </library>
       </libraryDependencies>
       <providesSingleThreadedContext>Never</providesSingleThreadedContext>
-    </context> 
+      <allowCustomLogic>true</allowCustomLogic>
+    </context>
     <parameters>
       <allowAny>false</allowAny>
       <parameter>
         <name>address</name>
-        <description>Server address to listen on</description>
+        <description>This optional parameter with type rstring specifies a resolvable IP address or a machine name (e-g: myserver1.ibm.com, localhost etc.) on which the connections will be accepted. If &quot;0.0.0.0&quot; is given as an address, then the TCPServer operator will listen on all the available network interfaces including localhost (127.0.0.1). If the address parameter is not specified, this operator will listen on a network interface bound to the actual IP address of that machine's fully qualified host name.</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -45,7 +165,7 @@
       </parameter>
       <parameter>
         <name>port</name>
-        <description>Server port to listen on</description>
+        <description>This mandatory parameter with type uint32 specifies the port number on which the connections will be accepted.</description>
         <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -54,7 +174,7 @@
       </parameter>
       <parameter>
         <name>threadPoolSize</name>
-        <description>Number of threads to use for the connections</description>
+        <description>This mandatory parameter with type uint32 specifies the number of threads per TCPServer operator instance.</description>
         <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -63,7 +183,7 @@
       </parameter>
       <parameter>
         <name>connectionCap</name>
-        <description>Maximum number of concurrent connections</description>
+        <description>This optional parameter with type uint32 specifies the maximum number of connections that can be established to a single instance of the TCPServer operator before it starts refusing additional connections.</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -72,23 +192,27 @@
       </parameter>
       <parameter>
         <name>keepAlive</name>
-        <description>Use the keepalive timer to check if the connection is alive.</description>
+        <description>This parameter is optional and it controls the internal behavior of the TCPServer operator in case of idle or broken connections. This parameter prevents a server from hanging on a connection when it drops, and it keeps a connection live when there is no normal activity. The value of the parameter is a tuple literal that specifies the configurable attributes. If any of the configurable attribute values for a specific keepAlive parameter is set to zero, the default system value of the keepAlive parameter is used. The configurable attributes for this parameter include:
+
+* uint32 time: The number of seconds that the connection sits idle before a keepalive probe is sent.
+* uint32 probes: The maximum number of probes to send to establish the state of the connection.
+* uint32 interval: The time interval in seconds between each probe.
+</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>Constant</expressionMode>
-        <type>tuple&lt;uint32 time, uint32 probes, uint32 interval&gt;</type>
+        <type>tuple&lt;uint32 time, uint32 probes, uint32 interval></type>
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
         <name>blockSize</name>
-        <description>block size, flush output buffer in case of overflow. If blockSize unused or set to "0" flush buffer in case of "\n" detected in TCP Stream. </description>
+        <description>block size, flush output buffer in case of overflow. If blockSize unused or set to &quot;0&quot; flush buffer in case of &quot;\n&quot; detected in TCP Stream. </description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
         <type>uint32</type>
         <cardinality>1</cardinality>
       </parameter>
-
       <parameter>
         <name>format</name>
         <description>Format of the data on output port</description>
@@ -98,30 +222,84 @@
         <type>DataFormat</type>
         <cardinality>1</cardinality>
       </parameter>
-      
+      <parameter>
+        <name>maxUnreadResponseCount</name>
+        <description>This optional parameter with type uint32 specifies the maximum number of unread responses until the duplex connection is disabled (becomes read only) .</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>uint32</type>
+        <cardinality>1</cardinality>
+      </parameter>
     </parameters>
-    <inputPorts/>
+    <inputPorts>
+      <inputPortSet>
+        <description>
+The `TCPServer` operator has one optional input port.  The schema of the input port must be of type `TcpServerStrT` or `TCPServerBlobT` or equivalent.  The operator sends the data received to the `srcIP`:`srcPort` as specified on the incoming tuple.</description>
+        <windowingDescription></windowingDescription>
+        <tupleMutationAllowed>false</tupleMutationAllowed>
+        <windowingMode>NonWindowed</windowingMode>
+        <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+        <controlPort>true</controlPort>
+        <cardinality>1</cardinality>
+        <optional>true</optional>
+      </inputPortSet>
+    </inputPorts>
     <outputPorts>
       <outputPortSet>
-        <expressionMode>Nonexistent</expressionMode> 
+        <description>
+The first output port is mandatory and must contain a tuple with one mandatory and up to two optional attributes. The output port punctuation mode is Generating. The TCPServer operator outputs a window marker punctuation when an existing connection is released. The mandatory attribute must have type rstring (for line attribute) or blob (for block attribute).
+
+* mandatory
+  * attribute name line and type rstringor
+  * attribute name block and type blob
+* optional
+  * attribute name srcIP and type rstring
+  * attribute name srcPort and type uint32
+
+This output stream will carry tuples depending on the mandatory attribute used: 
+
+* line Collect characters until the end of line marker is detected or, when parameter blockSize is given, the number of received characters exceeds the blockSize. Valid values for the EOL marker are &quot;\n&quot; and &quot;\r\n&quot;. In this case, output tuples emitted by this operator will not contain the EOL marker.
+* block Collect bytes until the number of received bytes exceeds the given blockSize.
+    
+      </description>
+        <expressionMode>Nonexistent</expressionMode>
         <autoAssignment>false</autoAssignment>
         <completeAssignment>false</completeAssignment>
         <rewriteAllowed>false</rewriteAllowed>
         <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+        <windowPunctuationInputPort>-1</windowPunctuationInputPort>
         <tupleMutationAllowed>true</tupleMutationAllowed>
         <cardinality>1</cardinality>
         <optional>false</optional>
-      </outputPortSet>  
+      </outputPortSet>
       <outputPortSet>
-        <expressionMode>Nonexistent</expressionMode> 
+        <description>
+The second output port is optional and must use a Stream schema with the following three attributes:
+
+* First attribute name is status and type rstring
+* Second attribute name is srcIP and type rstring
+* Third attribute name is srcPort and type uint32
+
+This optional second output stream generates tuples when a new connection is established or when an existing connection is released or when a connect is rejected because of threadPoolSize/connectionCap is exceeded. Additional information provided in this output stream is useful for application-specific logging, filtering, book-keeping etc. The status attribute in this output stream will carry one of these values:
+
+* &quot;connected&quot;
+* &quot;disconnected&quot;
+* &quot;rejected&quot;
+
+    Example: `status=&quot;connected&quot;,srcIP=&quot;192.168.92.130&quot;,srcPort=39850`     
+
+</description>
+        <expressionMode>Nonexistent</expressionMode>
         <autoAssignment>false</autoAssignment>
         <completeAssignment>false</completeAssignment>
         <rewriteAllowed>false</rewriteAllowed>
         <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+        <windowPunctuationInputPort>-1</windowPunctuationInputPort>
         <tupleMutationAllowed>true</tupleMutationAllowed>
         <cardinality>1</cardinality>
         <optional>true</optional>
-      </outputPortSet>  
+      </outputPortSet>
     </outputPorts>
   </cppOperatorModel>
 </operatorModel>

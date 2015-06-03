@@ -1,13 +1,19 @@
 <%
 #######################################################################
-# Copyright (C)2012, International Business Machines Corporation and  
+# Copyright (C)2012, 2015 International Business Machines Corporation and  
 # others. All Rights Reserved.                                    
 #######################################################################  
 %>
 
 /* Additional includes go here */
+#include <SPL/Runtime/Function/UtilFunctions.h>
+#include <streams_boost/thread.hpp>
 #include <streams_boost/bind.hpp>
+#include <streams_boost/shared_ptr.hpp>
+#include <streams_boost/algorithm/string/predicate.hpp>
+#include <stdlib.h>
 #include "mcts/data_item.h"
+
 
 <%
   use TCPServerCommon;
@@ -15,6 +21,8 @@
 %>
 
 <%SPL::CodeGen::implementationPrologue($model);%>
+
+using namespace SPL;
 
 <%
   my $port = $model->getParameterByName("port")->getValueAt(0)->getCppExpression();
@@ -36,9 +44,14 @@
   # Apply default value for keepAlive.
   $keepAlive = $keepAlive ? $keepAlive->getValueAt(0)->getCppExpression() : "";
 
+  my $maxUnreadResponseCount = $model->getParameterByName("maxUnreadResponseCount");
+  # Apply default value for maxUnreadResponseCount.
+  $maxUnreadResponseCount = $maxUnreadResponseCount ? $maxUnreadResponseCount->getValueAt(0)->getCppExpression() : 100;
+
 	my $oport0 = $model->getOutputPortAt(0);
   	my $oport1 = $model->getOutputPortAt(1);
-
+  	
+  	my $iport0 = $model->getInputPortAt(0);
 %>
 
 	<%if ($oport0->getAttributeByName("line")){%>
@@ -67,10 +80,14 @@ __thread MY_OPERATOR::OPort1Type * MY_OPERATOR::otuple1_ = NULL;
 MY_OPERATOR::MY_OPERATOR()
     : server_(
               <%=$address%>, 
-              <%=$port%>, <%=$threadPoolSize%>, <%=$connectionCap%>, <%=$blockSize%>,  MY_OPERATOR::outFormat_,
+              <%=$port%>, <%=$threadPoolSize%>, <%=$connectionCap%>, <%=$maxUnreadResponseCount%>,
+              <%=$blockSize%>,  MY_OPERATOR::outFormat_, <%=defined($iport0) ? 'true' : 'false'%>,
               streams_boost::bind(&MY_OPERATOR::handleData, this, _1, _2, _3) ,
-              streams_boost::bind(&MY_OPERATOR::handleInfo, this, _1, _2, _3)
-              )
+              streams_boost::bind(&MY_OPERATOR::handleError, this, _1, _2, _3) ,
+              streams_boost::bind(&MY_OPERATOR::handleInfo, this, _1, _2, _3) ,
+              streams_boost::bind(&MY_OPERATOR::handleMetrics, this, _1, _2)
+              ),
+	  opm_(getContext().getMetrics())
 {
     // Initialization code goes here
     // If the user provided a KeepAlive parameter, we can set that now.
@@ -164,5 +181,74 @@ void MY_OPERATOR::handleInfo(std::string const & status, std::string const & ipA
     <%}%>
 }
 
+void MY_OPERATOR::handleWrite(std::string const & line, std::string const & ipAddress, uint32_t port)
+{
+	SPL::blob raw(reinterpret_cast<unsigned char const *>(line.data()), line.size());	
+	if (!streams_boost::algorithm::ends_with(line, "\n")){
+		raw += atoi("\n");
+	}	
+	server_.handleWrite(raw, true, ipAddress, port);
+}
+
+void MY_OPERATOR::handleWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port)
+{
+	server_.handleWrite(const_cast<SPL::blob &>(raw), false, ipAddress, port);
+}
+
+void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port)
+{
+//	SPLAPPTRC(L_ERROR, "Data is sent to " << ipAddress << ":" << port, "TCPServer");
+	if (e) {
+		SPLAPPTRC(L_ERROR, "Unable to send data to " << ipAddress << ":" << port << "\n" << e.message(), "TCPServer");
+	}
+	else {
+		handleMetrics(1, 1);
+	}
+}
+
+void MY_OPERATOR::handleMetrics(uint32_t kind, int64_t value)
+{
+	switch(static_cast<MetricKind>(kind)) {
+		case N_CONNECTIONS:
+			opm_.getCustomMetricByName("nConnections").setValueNoLock(value);
+			break;
+		case N_RESPONSES:
+			opm_.getCustomMetricByName("nResponses").incrementValue();
+	}
+}
+
+
+// Tuple processing for non-mutating ports
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+	<%if ($iport0) {%>
+	const IPort0Type& t = (const IPort0Type&) tuple;
+	
+	// get dest server
+	<%if ($iport0->getAttributeByName("srcIP")){%>
+	const std::string destIp = t.get_srcIP();
+	<%}%>
+	
+	// get dest IP
+	<%if ($iport0->getAttributeByName("srcPort")){%>
+	const uint32_t destPort = (uint32_t)t.get_srcPort();
+	<%}%>
+
+	// if data is rstring, call handleWrite(string, ipAddress, port)	
+	<%if ($iport0->getAttributeByName("line")){%>
+		
+		std::string const & line = t.get_line();
+		handleWrite(line, destIp, destPort);
+		
+	// else if idata is a blob, call handleWrite(blob, ipAddress, port)		
+	<%}else{%>
+		
+		SPL::blob const & block = t.get_block();
+		handleWrite(block, destIp, destPort);
+	<%}%>
+	<%}%>
+}
+
 <%SPL::CodeGen::implementationEpilogue($model);%>
+
 

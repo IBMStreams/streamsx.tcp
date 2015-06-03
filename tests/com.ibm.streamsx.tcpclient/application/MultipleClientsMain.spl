@@ -1,0 +1,181 @@
+/*
+ Copyright (C)2015 International Business Machines Corporation and
+ others. All Rights Reserved.
+*/
+
+namespace application;
+
+use com.ibm.streamsx.tcpclient::*;
+
+
+composite MultipleClientsMain
+{
+	param
+		expression<rstring> $host:"d0410b01";
+		expression<int32> $port:22222;
+		expression<uint32> $numIter:20000u;
+		expression<float64> $period:0.001;
+
+	graph
+		(stream<rstring line> Client2_0_out0) as Client2_0 = Custom()
+		{
+			logic
+				onProcess :
+				{
+					mutable uint32 cnt = 0u ;
+					while(cnt < $numIter)
+					{
+						submit({ line = getRequest("2") + "\n" }, Client2_0_out0) ;
+						cnt ++ ;
+						
+						if ($period > 0.0)
+						{
+							block($period) ;
+						}
+					}
+
+					while(! isShutdown())
+					{
+						spl.utility::block(1000.0) ;
+					}
+
+				}
+
+		}
+
+		(stream<rstring line> Client2_1_out0) as Client2_1 =
+			TcpDuplexClient(Client2_0_out0)
+		{
+			param
+				host: $host;
+				port: $port;
+		}
+
+		() as Client2_2 = FileSink(Client2_0_out0)
+		{
+			param
+				file : "response2.exp" ;
+				flush : 1u ;
+		}
+
+		(stream<rstring line> Client2_3_out0) as Client2_3 = Functor(Client2_1_out0)
+		{
+			output
+				Client2_3_out0 : line = line + "\n" ;
+		}
+
+		() as Client2_4 = FileSink(Client2_3_out0 as inPort0Alias)
+		{
+			param
+				file : "responses2.act" ;
+				flush : 1u ;
+		}
+
+		(stream<rstring line> Client1_0_out0) as Client1_0 = Custom()
+		{
+			logic
+				onProcess :
+				{
+					mutable uint32 cnt = 0u ;
+					while(cnt < $numIter)
+					{
+						submit({ line = getRequest("1") + "\n" }, Client1_0_out0) ;
+						cnt ++ ;
+						if ($period > 0.0)
+						{
+							block($period) ;
+						}
+					}
+
+					while(! isShutdown())
+					{
+						spl.utility::block(1000.0) ;
+					}
+
+				}
+
+		}
+
+		(stream<rstring line> Client1_1_out0) as Client1_1 =
+			TcpDuplexClient(Client1_0_out0)
+		{
+			param
+				host: $host;
+				port: $port;
+		}
+
+		() as Client1_2 = FileSink(Client1_0_out0)
+		{
+			param
+				file : "response1.exp" ;
+				flush : 1u ;
+		}
+
+		(stream<rstring line> Client1_3_out0) as Client1_3 = Functor(Client1_1_out0)
+		{
+			output
+				Client1_3_out0 : line = line + "\n" ;
+		}
+
+		() as Client1_4 = FileSink(Client1_3_out0 as inPort0Alias)
+		{
+			param
+				file : "responses1.act" ;
+				flush : 1u ;
+		}
+
+		(stream<rstring line> Client3_0_out0) as Client3_0 = Custom()
+		{
+			logic
+				onProcess :
+				{
+					mutable uint32 cnt = 0u ;
+					while(cnt < $numIter)
+					{
+						submit({ line = getRequest("3") + "\n" }, Client3_0_out0) ;
+						cnt ++ ;
+						if ($period > 0.0)
+						{
+							block($period) ;
+						}
+					}
+
+					while(! isShutdown())
+					{
+						spl.utility::block(1000.0) ;
+					}
+
+				}
+
+		}
+
+		(stream<rstring line> Client3_1_out0) as Client3_1 =
+			TcpDuplexClient(Client3_0_out0)
+		{
+			param
+				host: $host;
+				port: $port;
+		}
+
+		() as Client3_2 = FileSink(Client3_0_out0)
+		{
+			param
+				file : "response3.exp" ;
+				flush : 1u ;
+		}
+
+		(stream<rstring line> Client3_3_out0) as Client3_3 = Functor(Client3_1_out0)
+		{
+			output
+				Client3_3_out0 : line = line + "\n" ;
+		}
+
+		() as Client3_4 = FileSink(Client3_3_out0 as inPort0Alias)
+		{
+			param
+				file : "responses3.act" ;
+				flush : 1u ;
+		}
+
+}
+

@@ -34,7 +34,7 @@ com.ibm.streamsx.tcp::TCPServer operator - a multi-connection, multi-threaded
 source operator that accepts text or binary data from one or more TCP sockets.
 
 Description about this TCPServer operator is well documented in the following web browser friendly HTML file:
-com.ibm.streamsx.tcp/doc/com.ibm.streamsx.tcp.Multiconnection-Tcp-Server.html
+com.ibm.streamsx.tcp/doc/spldoc/index.html
 
 You can see this toolkit at work by running the included sample applications (see item 2 below).
 

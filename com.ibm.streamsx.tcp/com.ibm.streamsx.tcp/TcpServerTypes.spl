@@ -1,0 +1,23 @@
+namespace com.ibm.streamsx.tcp ;
+
+/** Schema for the output port 0 or input port 0 if the data is an rstring.
+ * * line represents the data encoded as rstring
+ * * srcIP represents the IP address of the remote host to connect to.
+ * * srcPort represents the port on the remote host to connect to.
+ */
+type TcpServerStrT = rstring line, rstring srcIP, uint32 srcPort ;
+
+/** Schema for the output port 0 or input port 0 if the data is a blob.
+ * * block represents the data encoded as blob
+ * * srcIP represents the IP address of the remote host to connect to.
+ * * srcPort represents the port on the remote host to connect to.
+ */
+type TcpServerBlobT = blob block, rstring srcIP, uint32 srcPort ;
+
+/** Schema for the output port 1 to report status of connection
+ * * status represents status of connection in rstring
+ * * srcIP represents the IP address of the remote host to connect to.
+ * * srcPort represents the port on the remote host to connect to.
+ */
+type TcpServerStatusT = rstring status, rstring srcIP, uint32 srcPort ;
+

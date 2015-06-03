@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Preprocessor options for mixed-mode source file: application/ManyCleintsMain.splmm</comment>
+<entry key="com.ibm.streams.studio.splproject:TIME_OUT">-1</entry>
+<entry key="com.ibm.streams.studio.splproject:MAXIMUM_SIZE">-1</entry>
+<entry key="com.ibm.streams.studio.splproject:PREPROCESSOR_ARGUMENTS_DESCRIPTION_1">number of clients</entry>
+<entry key="com.ibm.streams.studio.splproject:FILE_PATH">application/ManyCleintsMain.splmm</entry>
+<entry key="com.ibm.streams.studio.splproject:PREPROCESSOR_ARGUMENTS_ARG_1">5</entry>
+</properties>

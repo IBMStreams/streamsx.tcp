@@ -10,13 +10,17 @@
 
 #include <string>
 #include <vector>
+#include <tr1/unordered_map>
 #include <streams_boost/asio.hpp>
 #include <streams_boost/shared_ptr.hpp>
+#include <streams_boost/thread/mutex.hpp>
 
+#include "mcts/async_data_item.h"
 #include "mcts/data_item.h"
 #include "mcts/connection.h"
 #include "mcts/data_handler.h"
 #include "mcts/info_handler.h"
+#include "mcts/metrics_handler.h"
 #include "mcts/io_service_pool.h"
 
 namespace mcts 
@@ -38,20 +42,25 @@ namespace mcts
         /// @param handler that will process the data 
         /// @param handler that will send connection status infos
         TCPServer(std::string const & address, uint32_t port, 
-                  std::size_t threadPoolSize, std::size_t maxConnections, uint32_t blockSize, outFormat_t outFormat,
-                  DataHandler::Handler dhandler,
-                  InfoHandler::Handler iHandler);
-        
+                  std::size_t threadPoolSize, std::size_t maxConnections, std::size_t maxUnreadResponseCount,
+                  uint32_t blockSize, outFormat_t outFormat, bool isDuplexConnection,
+                  DataHandler::Handler dhandler, AsyncDataItem::Handler eHandler, InfoHandler::Handler iHandler, MetricsHandler::Handler mHandler);
+
         /// Set the keep alive socket options
         void setKeepAlive(int32_t time, int32_t probes, int32_t interval);
 
 
         /// Run the server's io_service loop
         void run();
-        
+
         /// Stop the server
         void stop();
         
+        /// Handle asynchronous write operation
+        void handleWrite(SPL::blob & raw, bool delimited, std::string const & ipAddress, uint32_t port);
+
+        void mapConnection(TCPConnectionWeakPtr conn);
+
     private:
         /// Handle completion of an asynchronous accept operation
         /// @param e the error code of the operation
@@ -62,6 +71,9 @@ namespace mcts
 
         /// The number of concurrent connections allowed
         std::size_t maxConnections_;
+
+        /// The number of unread responses until the duplex connection is disabled (becomes read only)
+        std::size_t maxUnreadResponseCount_;
 
         /// The maximum size of receive buffer, flush buffer in case of overflow
         uint32_t blockSize_;
@@ -87,14 +99,25 @@ namespace mcts
         /// The handler for all incoming requests.
         DataHandler dataHandler_;
 
+        /// The handler used to process the error messages.
+        AsyncDataItem errorHandler_;
+
+        /// The handler used to process the metrics.
+        MetricsHandler metricsHandler_;
+
         /// The format output data: line (as rstring) or block (as blob)
         outFormat_t outFormat_;
 
         /// The next connection to be accepted.
+        bool isDuplexConnection_;
+
+        /// The next connection to be accepted.
         TCPConnectionPtr nextConnection_;
 
+        /// TCPConnection map to handle duplex communication
+        std::tr1::unordered_map<std::string, TCPConnectionWeakPtr> connMap_;
 
-
+        streams_boost::mutex mutex_;
     };  
 } 
 

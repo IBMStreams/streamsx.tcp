@@ -15,8 +15,10 @@ all: lib/libstreams.spl.multiconnection.tcp.server.so
 lib/server.o: src/mcts/server.cpp \
 	      include/mcts/server.h \
 	      include/mcts/connection.h \
+	      include/mcts/async_data_item.h \
 	      include/mcts/data_handler.h \
-	      include/mcts/info_handler.h 
+	      include/mcts/info_handler.h \
+	      include/mcts/metrics_handler.h 
 	@echo Compiling 'src/mcts/server.cpp' ...
 	mkdir   -p    ./lib
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/server.cpp -o $@ 
@@ -25,7 +27,7 @@ lib/connection.o: src/mcts/connection.cpp \
 	          include/mcts/connection.h \
                   include/mcts/data_item.h \
                   include/mcts/data_handler.h \
-		  include/mcts/info_handler.h 
+		  include/mcts/info_handler.h
 	@echo Compiling 'src/mcts/connection.cpp' ...
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/connection.cpp -o $@ 
 
@@ -36,6 +38,14 @@ lib/data_handler.o: src/mcts/data_handler.cpp include/mcts/data_item.h
 lib/info_handler.o: src/mcts/info_handler.cpp include/mcts/data_item.h 
 	@echo Compiling 'src/mcts/info_handler.cpp' ...
 	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/info_handler.cpp -o $@ 
+
+lib/metrics_handler.o: src/mcts/metrics_handler.cpp
+	@echo Compiling 'src/mcts/metrics_handler.cpp' ...
+	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/metrics_handler.cpp -o $@ 
+
+lib/async_data_item.o: src/mcts/async_data_item.cpp 
+	@echo Compiling 'src/mcts/async_data_item.cpp' ...
+	@g++ -Wall $(CXXFLAGS) -I include $(SPL_INCLUDE_OPTIONS) -c src/mcts/async_data_item.cpp -o $@ 
 
 lib/data_item.o: src/mcts/data_item.cpp 
 	@echo Compiling 'src/mcts/data_item.cpp' ...
@@ -48,9 +58,11 @@ lib/io_service_pool.o: src/mcts/io_service_pool.cpp
 lib/libstreams.spl.multiconnection.tcp.server.so: \
 	lib/server.o \
 	lib/connection.o \
+	lib/async_data_item.o \
 	lib/data_item.o \
 	lib/data_handler.o \
 	lib/info_handler.o \
+	lib/metrics_handler.o \
 	lib/io_service_pool.o 
 	@echo Building C++ shared library '$@'
 	@g++ -shared -o $@ $^		

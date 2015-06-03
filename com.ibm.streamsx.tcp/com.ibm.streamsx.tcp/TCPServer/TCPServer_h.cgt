@@ -1,11 +1,11 @@
 <%
 #######################################################################
-# Copyright (C)2012, International Business Machines Corporation and  
+# Copyright (C)2012, 2015 International Business Machines Corporation and  
 # others. All Rights Reserved.                                    
 #######################################################################  
 %>
 
-/* Additional includes go here */
+#include <SPL/Runtime/Operator/OperatorMetrics.h>
 #include "mcts/server.h"
 #include "mcts/data_item.h"
 
@@ -37,12 +37,31 @@ public:
 
     // Processing for source and threaded operators   
     void process(uint32_t idx);
+    
+    // Tuple processing for non-mutating ports
+	void process(Tuple const & tuple, uint32_t port);
 
     // For handling data from the server
     void handleData(std::string & line, std::string const & ipAddress, uint32_t port);
 
 	// For handling connection status info from the server
     void handleInfo(std::string const & status, std::string const & ipAddress, uint32_t port);
+    
+	// For handling string data from a stream and writing it to a client 
+	void handleWrite(std::string const & line, std::string const & ipAddress, uint32_t port);
+	void handleWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port);
+
+	// For handling errors when writing data to a client 
+	void handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port);
+
+	// For handling metrics
+	void handleMetrics(uint32_t kind, int64_t value);
+	
+	enum MetricKind
+	{
+	    N_CONNECTIONS,
+	    N_RESPONSES
+	};
 
 private:
     static __thread OPort0Type * otuple0_;
@@ -58,6 +77,7 @@ private:
     
     SPL::Mutex mutex_;
     mcts::TCPServer server_;
+	OperatorMetrics & opm_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

@@ -1,5 +1,5 @@
 #######################################################################
-# Copyright (C)2012, International Business Machines Corporation and  
+# Copyright (C)2012, 2015 International Business Machines Corporation and  
 # others. All Rights Reserved.                                    
 #######################################################################  
 package TCPServerCommon;
@@ -11,6 +11,68 @@ use Data::Dumper;
 sub verify($)
 {
    my ($model) = @_;
+   verifyOutputPort($model);
+   
+	my $iport = $model->getInputPortAt(0);
+	if ($iport)
+	{
+		verifyInputPort($model);
+	}	
+}
+
+sub verifyInputPort($) {
+
+   my ($model) = @_;
+
+   # check input port 0 (mandatory)
+   my $iport = $model->getInputPortAt(0);
+   my $type = $iport->getSPLTupleType();
+   
+
+    # attributes for port 0: name => type, [m|o] (mandatory "m" or optional "o")
+	my %attributes = (	line => ["rstring","m"],
+						block => ["blob","m"],
+						srcIP => ["rstring","o"],
+						srcPort => ["uint32","o"]);
+
+	my $noOfAttr = $iport->getNumberOfAttributes();
+	my $noOfMandAttr = 0;
+	my $a;
+	my $t;
+	
+	for (my $i = 0; $i < $noOfAttr; ++$i) {
+		$a = $iport->getAttributeAt($i)->getName();
+		$t = $iport->getAttributeAt($i)->getSPLType();
+		SPL::CodeGen::exitln("The '$a' attribute in the schema for input port number 0 is not allowed.", $iport->getSourceLocation()) if (not defined($attributes{$a}));
+		SPL::CodeGen::exitln("The type of the '$a' attribute in the schema for port number 0 is '$t', but the '$attributes{$a}[0]' type is expected.", $iport->getSourceLocation()) if ($attributes{$a}[0] ne $t);
+ 
+	}
+	
+	my $line = $iport->getAttributeByName("line");
+	my $block = $iport->getAttributeByName("block");	
+	
+	#SPL::CodeGen::exitln("The schema for input port number 0 expects 'line' OR 'block' attribute.", $iport->getSourceLocation()) 
+	#	if (defined $line && defined $block);
+		
+	# check that srcIP and #srcPort must exist		
+	my $srcIP = $iport->getAttributeByName("srcIP");
+	my $srcPort = $iport->getAttributeByName("srcPort");
+	
+	if (!(defined $srcIP))
+	{
+		SPL::CodeGen::exitln("The schema for input port number 0 expects 'rstring srcIP' as an attribute.", $iport->getSourceLocation())
+	}
+	
+	if (!(defined $srcPort))
+	{
+		SPL::CodeGen::exitln("The schema for input port number 0 expects 'uint32 srcPort' as an attribute.", $iport->getSourceLocation())
+	}
+}
+
+
+sub verifyOutputPort($){
+
+my ($model) = @_;
 
 # check output port 0 (mandatory)
    my $oport = $model->getOutputPortAt(0);
@@ -31,11 +93,11 @@ sub verify($)
 	for (my $i = 0; $i < $noOfAttr; ++$i) {
 		$a = $oport->getAttributeAt($i)->getName();
 		$t = $oport->getAttributeAt($i)->getSPLType();
-		SPL::CodeGen::exitln("The '$a' attribute in the schema for port number 0 is not allowed.", $oport->getSourceLocation()) if (not defined($attributes{$a}));
+		SPL::CodeGen::exitln("The '$a' attribute in the schema for output port number 0 is not allowed.", $oport->getSourceLocation()) if (not defined($attributes{$a}));
 		SPL::CodeGen::exitln("The type of the '$a' attribute in the schema for port number 0 is '$t', but the '$attributes{$a}[0]' type is expected.", $oport->getSourceLocation()) if ($attributes{$a}[0] ne $t);
 		$noOfMandAttr++ if ($attributes{$a}[1] eq "m"); 
 	}
-	SPL::CodeGen::exitln("The schema for port number 0 expects 'line' OR 'block' attribute.", $oport->getSourceLocation()) 
+	SPL::CodeGen::exitln("The schema for output port number 0 expects 'line' OR 'block' attribute.", $oport->getSourceLocation()) 
 		if ($noOfMandAttr > 1);
 	
 	
@@ -64,5 +126,7 @@ sub verify($)
        	{ name => "srcPort", type => "uint32" }
    	);
    }
+
 }
+
 1;
