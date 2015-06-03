@@ -1,26 +1,11 @@
-
-/*
- Copyright (C)2015 International Business Machines Corporation and
- others. All Rights Reserved.
-*/
 namespace application ;
 
 use com.ibm.streamsx.tcpclient::* ;
-public rstring getRequest(rstring clientId)
-{
-	return clientId +
-		"abcdefghiklmnopqrstuvwxyz|abcdefghijklmnopqrstuvwxyz|abcdefghijklmnopqrstuvwxyz|abcdefghijklmnopqrstuvwxyz|abcdefghijklmnopqrstuvwxyz" ;
-}
 
-public rstring getResponse(rstring request)
-{
-	return request ;
-}
-
-composite SingleClientMain
+composite SingleClientBlobMain
 {
 	param
-		expression<rstring> $host : "d0101b09" ;
+		expression<rstring> $host : "d0101b10" ;
 		expression<int32> $port : 22222 ;
 		expression<uint32> $numIter : 10000000u ;
 	graph
@@ -77,3 +62,5 @@ composite SingleClientMain
 		}
 
 }
+
+
