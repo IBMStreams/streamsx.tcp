@@ -215,6 +215,7 @@ namespace mcts
 				}
 				else {
 					connPtr->shutdown_send_once();
+					infoHandler_.handleInfo("responseDisabled", ipAddress, port);
 				}
 
 				return;

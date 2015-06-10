@@ -73,7 +73,7 @@ namespace mcts
 	void AsyncDataItem::handleError(streams_boost::system::error_code const & e, std::string const & ip, uint32_t port)
     {
 		if(TCPConnectionPtr connPtr = connWeakPtr_.lock()) {
-			__sync_fetch_and_sub(connPtr->getNumOutstandingWritesPtr(), 1);
+			if (!e) __sync_fetch_and_sub(connPtr->getNumOutstandingWritesPtr(), 1);
 		}
 
 		handler_( e, ip,  port);

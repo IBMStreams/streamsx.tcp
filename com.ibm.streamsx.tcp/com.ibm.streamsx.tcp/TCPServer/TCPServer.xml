@@ -281,11 +281,12 @@ The second output port is optional and must use a Stream schema with the followi
 * Second attribute name is srcIP and type rstring
 * Third attribute name is srcPort and type uint32
 
-This optional second output stream generates tuples when a new connection is established or when an existing connection is released or when a connect is rejected because of threadPoolSize/connectionCap is exceeded. Additional information provided in this output stream is useful for application-specific logging, filtering, book-keeping etc. The status attribute in this output stream will carry one of these values:
+This optional second output stream generates tuples when a new connection is established or when an existing connection is released, when a connect is rejected because of threadPoolSize/connectionCap is exceeded or when sending responses is disabled. Additional information provided in this output stream is useful for application-specific logging, filtering, book-keeping etc. The status attribute in this output stream will carry one of these values:
 
 * &quot;connected&quot;
 * &quot;disconnected&quot;
 * &quot;rejected&quot;
+* &quot;responseDisabled&quot;
 
     Example: `status=&quot;connected&quot;,srcIP=&quot;192.168.92.130&quot;,srcPort=39850`     
 
