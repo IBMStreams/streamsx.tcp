@@ -1,13 +1,17 @@
 /*
  Copyright (C)2015, International Business Machines Corporation and
  others. All Rights Reserved.
-*/
+ */
 package com.ibm.streamsx.tcpclient;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.util.List;
 
@@ -48,7 +52,7 @@ import com.ibm.streams.operator.Tuple;
 public class TcpDuplexClient extends AbstractOperator {
 
 	private Socket socket;
-	private BufferedReader inReader;
+	private Reader inReader;
 	private BufferedWriter outWriter;
 
 	private Thread readThread;
@@ -56,26 +60,15 @@ public class TcpDuplexClient extends AbstractOperator {
 	private class ReadRunnable implements Runnable {
 		@Override
 		public void run() {
-
-			try {
-				// read response from socket
-				String response = inReader.readLine();
-
-				while (response != null) {					
-					// output response
-					// Create a new tuple for output port 0
-					StreamingOutput<OutputTuple> outStream = getOutput(0);
-					OutputTuple outTuple = outStream.newTuple();
-					outTuple.setString(0, response);
-
-					// Submit new tuple to output port 0
-
-					getOperatorContext().getStreamingOutputs().get(0)
-							.submit(outTuple);
-
-					response = inReader.readLine();
+			if (inReader instanceof BufferedReader) {
+				readAsString();
+			}
+			else
+			{
+				while (true)
+				{
+					readResponse();
 				}
-			} catch (Exception e) {
 			}
 
 		}
@@ -99,15 +92,21 @@ public class TcpDuplexClient extends AbstractOperator {
 				"Operator " + context.getName() + " initializing in PE: "
 						+ context.getPE().getPEId() + " in Job: "
 						+ context.getPE().getJobId());
-		
-		String host = getOperatorContext().getParameterValues("host").get(0);
-		int port = Integer.valueOf(getOperatorContext().getParameterValues("port").get(0));
 
-		socket = new Socket(host, port);
-		inReader = new BufferedReader(new InputStreamReader(
-				socket.getInputStream()));
+		String host = getOperatorContext().getParameterValues("host").get(0);
+		int port = Integer.valueOf(getOperatorContext().getParameterValues(
+				"port").get(0));
+
+		socket = new Socket(host, port);	
+		
 		outWriter = new BufferedWriter(new OutputStreamWriter(
 				socket.getOutputStream()));
+		
+//		inReader = new BufferedReader(new InputStreamReader(
+//				socket.getInputStream()));
+		
+		inReader = new InputStreamReader(socket.getInputStream());
+
 	}
 
 	/**
@@ -131,15 +130,14 @@ public class TcpDuplexClient extends AbstractOperator {
 
 		List<String> values = context.getParameterValues("readResponse");
 		boolean startReadThread = true;
-		if (values.size() > 0)
-		{
+		if (values.size() > 0) {
 			Boolean read = Boolean.valueOf(values.get(0));
 			startReadThread = read.booleanValue();
 		}
-		
-		if (startReadThread)
-		{
-			readThread = context.getThreadFactory().newThread(new ReadRunnable());
+
+		if (startReadThread) {
+			readThread = context.getThreadFactory().newThread(
+					new ReadRunnable());
 			readThread.start();
 		}
 	}
@@ -168,7 +166,61 @@ public class TcpDuplexClient extends AbstractOperator {
 		// send it through the socket
 		outWriter.write(line);
 		outWriter.flush();
+		
+//		readResponse();
 
+	}
+	
+	private void readResponse() {
+		System.out.println("Read Response");
+		try {
+			byte[] len = new byte[8];
+			char[] buffer = new char[1024*1024];
+			
+			InputStream inStream = socket.getInputStream();
+			
+			int numRead = inStream.read(len);
+			
+			if (numRead != -1) {
+				
+				System.out.println(len);
+
+				// convert length to a number
+				BigInteger msgLen = new BigInteger(len);
+				
+				System.out.println("Buffer length: " + msgLen);
+				
+				int numBytes = msgLen.intValue();
+				if (numBytes > 0)
+				{
+					// read the next numBytes
+
+					numRead = inReader.read(buffer, 0,  numBytes);
+					
+					if (numRead != -1)
+					{
+						System.out.println("Buffer content: " + String.valueOf(buffer));
+						// output response
+						// Create a new tuple for output port 0
+						StreamingOutput<OutputTuple> outStream = getOutput(0);
+						OutputTuple outTuple = outStream.newTuple();
+						outTuple.setString(0, new String(buffer));
+
+						// Submit new tuple to output port 0
+
+						getOperatorContext().getStreamingOutputs().get(0)
+								.submit(outTuple);
+											
+					}
+				}						
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -200,11 +252,36 @@ public class TcpDuplexClient extends AbstractOperator {
 				"Operator " + context.getName() + " shutting down in PE: "
 						+ context.getPE().getPEId() + " in Job: "
 						+ context.getPE().getJobId());
-		
+
 		inReader.close();
 		outWriter.close();
 		socket.close();
-		
+
 		super.shutdown();
+	}
+
+	private void readAsString() {
+		BufferedReader bReader = (BufferedReader) inReader;
+		try {
+			// read response from socket
+
+			String response = bReader.readLine();
+
+			while (response != null) {
+				// output response
+				// Create a new tuple for output port 0
+				StreamingOutput<OutputTuple> outStream = getOutput(0);
+				OutputTuple outTuple = outStream.newTuple();
+				outTuple.setString(0, response);
+
+				// Submit new tuple to output port 0
+
+				getOperatorContext().getStreamingOutputs().get(0)
+						.submit(outTuple);
+
+				response = bReader.readLine();
+			}
+		} catch (Exception e) {
+		}
 	}
 }
