@@ -64,14 +64,6 @@ public class TcpDuplexClient extends AbstractOperator {
 			if (!isBinary) {
 				readAsString();
 			}
-			else
-			{
-				while (true)
-				{
-					readResponse();
-				}
-			}
-
 		}
 
 	}
@@ -177,7 +169,8 @@ public class TcpDuplexClient extends AbstractOperator {
 		outWriter.write(line);
 		outWriter.flush();
 		
-//		readResponse();
+		if (isBinary)
+			readResponse();
 
 	}
 	
