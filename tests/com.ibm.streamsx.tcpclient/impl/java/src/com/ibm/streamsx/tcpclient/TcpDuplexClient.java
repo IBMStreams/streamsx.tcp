@@ -102,10 +102,10 @@ public class TcpDuplexClient extends AbstractOperator {
 		outWriter = new BufferedWriter(new OutputStreamWriter(
 				socket.getOutputStream()));
 		
-//		inReader = new BufferedReader(new InputStreamReader(
-//				socket.getInputStream()));
+		inReader = new BufferedReader(new InputStreamReader(
+				socket.getInputStream()));
 		
-		inReader = new InputStreamReader(socket.getInputStream());
+//		inReader = new InputStreamReader(socket.getInputStream());
 
 	}
 
@@ -183,12 +183,12 @@ public class TcpDuplexClient extends AbstractOperator {
 			
 			if (numRead != -1) {
 				
-				System.out.println(len);
+//				System.out.println(len);
 
 				// convert length to a number
 				BigInteger msgLen = new BigInteger(len);
 				
-				System.out.println("Buffer length: " + msgLen);
+//				System.out.println("Buffer length: " + msgLen);
 				
 				int numBytes = msgLen.intValue();
 				if (numBytes > 0)
@@ -199,7 +199,7 @@ public class TcpDuplexClient extends AbstractOperator {
 					
 					if (numRead != -1)
 					{
-						System.out.println("Buffer content: " + String.valueOf(buffer));
+//						System.out.println("Buffer content: " + String.valueOf(buffer));
 						// output response
 						// Create a new tuple for output port 0
 						StreamingOutput<OutputTuple> outStream = getOutput(0);
