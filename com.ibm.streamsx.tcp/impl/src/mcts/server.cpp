@@ -215,7 +215,7 @@ namespace mcts
 				}
 				else {
 					connPtr->shutdown_send_once();
-					infoHandler_.handleInfo("responseDisabled", ipAddress, port);
+					errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::would_block), ipAddress, port);
 				}
 
 				return;
