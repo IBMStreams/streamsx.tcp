@@ -199,7 +199,14 @@ void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::s
 {
 //	SPLAPPTRC(L_ERROR, "Data is sent to " << ipAddress << ":" << port, "TCPServer");
 	if (e) {
-		SPLAPPTRC(L_ERROR, "Unable to send data to " << ipAddress << ":" << port << "\n" << e.message(), "TCPServer");
+		if (e == streams_boost::asio::error::would_block) {
+			SPLAPPTRC(L_ERROR, "responseDisabled: Unresponsive client on " << ipAddress << ":" << port << "\n" << e.message(), "TCPServer");
+			handleInfo("responseDisabled", ipAddress, port);
+		}
+		else {
+			SPLAPPTRC(L_ERROR, "responseError: Unable to send data to " << ipAddress << ":" << port << "\n" << e.message(), "TCPServer");
+			handleInfo("responseError", ipAddress, port);
+		}
 	}
 	else {
 		handleMetrics(1, 1);

@@ -26,10 +26,10 @@ use com.ibm.streamsx.tcpclient::* ;
 
 composite ManyClientsMain {
 	param
-		expression<rstring> $host:"d0101b09";
+		expression<rstring> $host:"d0101b10";
 		expression<int32> $port:22222;
 		expression<uint32> $numIter:1000000u;
-		expression<float64> $period:0.0005;
+		expression<float64> $period:0.001;
 
 	graph
 	<%  for(my $i=0; $i<$numClients; ++$i) {%>
@@ -42,7 +42,7 @@ composite ManyClientsMain {
 					mutable uint32 cnt = 0u ;
 					while(cnt < $numIter)
 					{
-						submit({ line = getRequest("<%=$i%>") + "\n" }, Beacon_1_out0_<%=$i%>) ;
+						submit({ line = getRequest("<%=$i%>|" + (rstring)cnt + "|") + "\n" }, Beacon_1_out0_<%=$i%>) ;
 						cnt ++ ;
 						block($period) ;
 					}

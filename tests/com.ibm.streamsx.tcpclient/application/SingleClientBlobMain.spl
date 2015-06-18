@@ -1,23 +1,8 @@
-
-/*
- Copyright (C)2015 International Business Machines Corporation and
- others. All Rights Reserved.
-*/
 namespace application ;
 
 use com.ibm.streamsx.tcpclient::* ;
-public rstring getRequest(rstring clientId)
-{
-	return clientId +
-		"abcdefghiklmnopqrstuvwxyz|abcdefghijklmnopqrstuvwxyz|abcdefghijklmnopqrstuvwxyz|abcdefghijklmnopqrstuvwxyz|abcdefghijklmnopqrstuvwxyz" ;
-}
 
-public rstring getResponse(rstring request)
-{
-	return request ;
-}
-
-composite SingleClientMain
+composite SingleClientBlobMain
 {
 	param
 		expression<rstring> $host : "d0101b09" ;
@@ -53,6 +38,7 @@ composite SingleClientMain
 			param
 				host : $host ;
 				port : $port ;
+				binary: true;
 		}
 
 		() as FileSink_3 = FileSink(Functor_5_out0 as inPort0Alias)
@@ -77,3 +63,5 @@ composite SingleClientMain
 		}
 
 }
+
+

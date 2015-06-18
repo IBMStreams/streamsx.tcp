@@ -1,0 +1,82 @@
+namespace application ;
+
+use com.ibm.streamsx.tcp::* ;
+
+composite TcpServerMTMain
+{
+	graph
+		stream<TcpServerStrT> TcpServerOp = TCPServer(Functor_3_out0,
+			Functor_Even_out0 as inPort0Alias)
+		{
+			param
+				port : 22222u ;
+				threadPoolSize : 20u ;
+		}
+
+		() as Sink1 = Custom(TcpServerOp)
+		{
+			logic
+				onTuple TcpServerOp :
+				{
+					printStringLn((rstring) TcpServerOp) ;
+				}
+
+		}
+
+		(stream<TcpServerStrT> Functor_3_out0) as Functor_Odd = Functor(Split_4_out0
+			as inPort0Alias)
+		{
+			logic
+				state :
+				{
+					mutable uint64 cnt = 0 ;
+				}
+
+				onTuple inPort0Alias :
+				{
+					cnt ++ ;
+				}
+
+			output
+				Functor_3_out0 : line = "Odd|" + line + "\n" ;
+		}
+
+		(stream<TcpServerStrT> Split_4_out0 ; stream<TcpServerStrT> Split_4_out1) as
+			Split_4 = Split(TcpServerOp)
+		{
+			logic
+				state :
+				{
+					mutable uint64 cnt = 0lu ;
+				}
+
+				onTuple TcpServerOp :
+				{
+					cnt ++ ;
+				}
+
+			param
+				index : cnt ;
+		}
+
+		(stream<TcpServerStrT> Functor_Even_out0) as Functor_Even =
+			Functor(Split_4_out1 as inPort0Alias)
+		{
+			logic
+				state :
+				{
+					mutable uint64 cnt = 0 ;
+				}
+
+				onTuple inPort0Alias :
+				{
+					cnt ++ ;
+				}
+
+			output
+				Functor_Even_out0 : line = "Even|" + line + "\n" ;
+		}
+
+}
+
+
