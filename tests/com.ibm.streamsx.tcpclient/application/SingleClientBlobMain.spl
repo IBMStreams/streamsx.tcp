@@ -38,6 +38,7 @@ composite SingleClientBlobMain
 			param
 				host : $host ;
 				port : $port ;
+				binary: true;
 		}
 
 		() as FileSink_3 = FileSink(Functor_5_out0 as inPort0Alias)

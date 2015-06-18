@@ -26,7 +26,7 @@ use com.ibm.streamsx.tcpclient::* ;
 
 composite ManyClientsNoReadMain {
 	param
-		expression<rstring> $host:"d0101b09";
+		expression<rstring> $host:"d0101b10";
 		expression<int32> $port:22222;
 		expression<uint32> $numIter:1000000u;
 		expression<float64> $period:0.0005;
