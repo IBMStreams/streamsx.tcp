@@ -33,7 +33,14 @@
       </parameter>
       <parameter>
         <name>readResponse</name>
-        <description/>
+        <description></description>
+        <optional>true</optional>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>binary</name>
+        <description></description>
         <optional>true</optional>
         <type>boolean</type>
         <cardinality>1</cardinality>

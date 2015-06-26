@@ -5,7 +5,7 @@ use com.ibm.streamsx.tcpclient::* ;
 composite SingleClientBlobMain
 {
 	param
-		expression<rstring> $host : "d0101b10" ;
+		expression<rstring> $host : "d0101b09" ;
 		expression<int32> $port : 22222 ;
 		expression<uint32> $numIter : 10000000u ;
 	graph
@@ -38,6 +38,7 @@ composite SingleClientBlobMain
 			param
 				host : $host ;
 				port : $port ;
+				binary: true;
 		}
 
 		() as FileSink_3 = FileSink(Functor_5_out0 as inPort0Alias)

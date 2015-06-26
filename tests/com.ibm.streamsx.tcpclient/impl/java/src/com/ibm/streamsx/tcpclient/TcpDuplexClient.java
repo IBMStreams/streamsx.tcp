@@ -56,21 +56,14 @@ public class TcpDuplexClient extends AbstractOperator {
 	private BufferedWriter outWriter;
 
 	private Thread readThread;
+	private boolean isBinary;
 
 	private class ReadRunnable implements Runnable {
 		@Override
 		public void run() {
-			if (inReader instanceof BufferedReader) {
+			if (!isBinary) {
 				readAsString();
 			}
-			else
-			{
-				while (true)
-				{
-					readResponse();
-				}
-			}
-
 		}
 
 	}
@@ -93,6 +86,13 @@ public class TcpDuplexClient extends AbstractOperator {
 						+ context.getPE().getPEId() + " in Job: "
 						+ context.getPE().getJobId());
 
+		
+		List<String> binaryValues = getOperatorContext().getParameterValues("binary");
+		if (binaryValues.size() > 0)
+		{
+			isBinary = Boolean.valueOf(binaryValues.get(0)).booleanValue();
+		}
+		
 		String host = getOperatorContext().getParameterValues("host").get(0);
 		int port = Integer.valueOf(getOperatorContext().getParameterValues(
 				"port").get(0));
@@ -102,11 +102,13 @@ public class TcpDuplexClient extends AbstractOperator {
 		outWriter = new BufferedWriter(new OutputStreamWriter(
 				socket.getOutputStream()));
 		
-		inReader = new BufferedReader(new InputStreamReader(
+		if (isBinary) {
+			inReader = new InputStreamReader(socket.getInputStream());
+		}
+		else {
+			inReader = new BufferedReader(new InputStreamReader(
 				socket.getInputStream()));
-		
-//		inReader = new InputStreamReader(socket.getInputStream());
-
+		}
 	}
 
 	/**
@@ -167,7 +169,8 @@ public class TcpDuplexClient extends AbstractOperator {
 		outWriter.write(line);
 		outWriter.flush();
 		
-//		readResponse();
+		if (isBinary)
+			readResponse();
 
 	}
 	
