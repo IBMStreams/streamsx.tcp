@@ -28,7 +28,8 @@ namespace mcts
           infoHandler_(iHandler),
           remoteIp_(""), // initialize with empty string
           blockSize_(blockSize),
-          outFormat_(outFormat)
+          outFormat_(outFormat),
+          numOutstandingWrites_(0)
     {
         __sync_fetch_and_add(&numConnections_, 1);
     }
