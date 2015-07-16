@@ -138,6 +138,11 @@ The TCPServer operator throws an exception and terminates the operator in the fo
           <value>block</value>
           <value>line</value>
         </enumeration>
+        <enumeration>
+          <name>ShutdownMode</name>
+          <value>readOnly</value>
+          <value>shutdown</value>
+        </enumeration>
       </customLiterals>
       <libraryDependencies>
         <library>
@@ -153,6 +158,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
       <allowCustomLogic>true</allowCustomLogic>
     </context>
     <parameters>
+      <description></description>
       <allowAny>false</allowAny>
       <parameter>
         <name>address</name>
@@ -224,11 +230,20 @@ The TCPServer operator throws an exception and terminates the operator in the fo
       </parameter>
       <parameter>
         <name>maxUnreadResponseCount</name>
-        <description>This optional parameter with type uint32 specifies the maximum number of unread responses until the duplex connection is disabled (becomes read only) .</description>
+        <description>This optional parameter with type uint32 specifies the maximum number of unread responses until the duplex connection is disabled.</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
         <type>uint32</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>disableDuplexConnection</name>
+        <description>This optional parameter with type ShutdownMode specifies disable mode: read only or total shutdown.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>CustomLiteral</expressionMode>
+        <type>ShutdownMode</type>
         <cardinality>1</cardinality>
       </parameter>
     </parameters>

@@ -43,7 +43,7 @@ namespace mcts
         /// @param handler that will send connection status infos
         TCPServer(std::string const & address, uint32_t port, 
                   std::size_t threadPoolSize, std::size_t maxConnections, std::size_t maxUnreadResponseCount,
-                  uint32_t blockSize, outFormat_t outFormat, bool isDuplexConnection,
+                  uint32_t blockSize, outFormat_t outFormat, bool isDuplexConnection, bool makeConnReadOnly,
                   DataHandler::Handler dhandler, AsyncDataItem::Handler eHandler, InfoHandler::Handler iHandler, MetricsHandler::Handler mHandler);
 
         /// Set the keep alive socket options
@@ -108,8 +108,11 @@ namespace mcts
         /// The format output data: line (as rstring) or block (as blob)
         outFormat_t outFormat_;
 
-        /// The next connection to be accepted.
+        /// Is the connection duplex.
         bool isDuplexConnection_;
+
+        /// When disabled - make the connection read only or shutdown..
+        bool makeConnReadOnly_;
 
         /// The next connection to be accepted.
         TCPConnectionPtr nextConnection_;

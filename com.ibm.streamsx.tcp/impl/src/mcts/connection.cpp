@@ -42,6 +42,12 @@ namespace mcts
             						socket_.remote_endpoint().address().to_string(),
             						socket_.remote_endpoint().port());
         }else{
+//			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+//				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+//			#else
+//				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+//			#endif
+
             dataItem_.flushData(TCPConnection::outFormat_);
             if (dataItem_.hasCompleteItems()) {
                 dataHandler_.handleData(dataItem_, remoteIp_, remotePort_);
@@ -90,9 +96,9 @@ namespace mcts
                                                     streams_boost::asio::placeholders::bytes_transferred));
     }
 
-    bool TCPConnection::shutdown_send_once()
+    bool TCPConnection::shutdown_send_once(bool makeConnReadOnly)
     {
-    	static bool shutdown_send_op = shutdown_send();
+    	static bool shutdown_send_op = shutdown_send(makeConnReadOnly);
     	return shutdown_send_op;
     }
 
@@ -100,6 +106,12 @@ namespace mcts
                                 std::size_t bytesTransferred)
     {
         if (!e) {
+//			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+//				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+//			#else
+//				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+//			#endif
+
             dataItem_.addData(buffer_.data(), buffer_.data() + bytesTransferred, TCPConnection::blockSize_, TCPConnection::outFormat_);
             if (dataItem_.hasCompleteItems()) {
                 dataHandler_.handleData(dataItem_, remoteIp_, remotePort_);
