@@ -35,6 +35,7 @@ namespace mcts
                          uint32_t blockSize,
                          outFormat_t outFormat,
                          bool isDuplexConnection,
+                         bool makeConnReadOnly,
                          DataHandler::Handler dHandler,
                          AsyncDataItem::Handler eHandler,
                          InfoHandler::Handler iHandler,
@@ -54,6 +55,7 @@ namespace mcts
           metricsHandler_(mHandler),
           outFormat_(outFormat),
           isDuplexConnection_(isDuplexConnection),
+          makeConnReadOnly_(makeConnReadOnly),
     	nextConnection_(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
     {
     	streams_boost::asio::ip::tcp::resolver resolver(acceptor_.get_io_service());
@@ -214,7 +216,7 @@ namespace mcts
 					}
 				}
 				else {
-					connPtr->shutdown_send_once();
+					connPtr->shutdown_send_once(makeConnReadOnly_);
 					errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::would_block), ipAddress, port);
 				}
 
