@@ -9,7 +9,7 @@
   <identity>
     <name>com.ibm.streamsx.tcp</name>
     <description>A multi-connection, multi-threaded source operator that accepts data from one or more TCP sockets</description>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <requiredProductVersion>2.0.0</requiredProductVersion>
   </identity>
   <dependencies/>
