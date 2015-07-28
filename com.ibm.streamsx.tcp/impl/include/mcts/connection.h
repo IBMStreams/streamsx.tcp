@@ -64,19 +64,7 @@ namespace mcts
         void start();
 
         /// Shutdown sending operation for the connection.
-        inline bool shutdown_send(bool makeConnReadOnly)
-        {
-        	if(makeConnReadOnly){
-        		socket_.shutdown(streams_boost::asio::ip::tcp::socket::shutdown_send);
-        	}
-        	else {
-        		socket_.shutdown(streams_boost::asio::ip::tcp::socket::shutdown_both);
-        	}
-        	return true;
-        }
-
-        /// Shutdown sending operation for the connection only once.
-        bool shutdown_send_once(bool makeConnReadOnly);
+        void shutdown_conn(bool makeConnReadOnly);
 
     private:
         /// Handle completion of a read operation.
@@ -117,7 +105,7 @@ namespace mcts
 
         uint32_t numOutstandingWrites_;
 
-//        streams_boost::mutex mutex_;
+        bool isShutdown_;
     };
     
     typedef streams_boost::shared_ptr<TCPConnection> TCPConnectionPtr;

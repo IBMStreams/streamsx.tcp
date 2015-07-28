@@ -166,20 +166,9 @@ namespace mcts
     {
     	std::stringstream connKey;
     	connKey << ipAddress << ":" << port;
-		bool connExist = false;
 		TCPConnectionWeakPtr connWeakPtr;
 
-    	{
-			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
-			#else
-				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
-			#endif
-
-			connExist = connMap_.count(connKey.str()) != 0;
-
-			if (connExist) connWeakPtr = connMap_[connKey.str()];
-    	}
+		const bool connExist = findConnection(connKey.str(), connWeakPtr);
 
     	if(connExist) {
 
@@ -216,40 +205,61 @@ namespace mcts
 					}
 				}
 				else {
-					connPtr->shutdown_send_once(makeConnReadOnly_);
+					connPtr->shutdown_conn(makeConnReadOnly_);
+					if(!makeConnReadOnly_) unmapConnection(connKey.str());
+
 					errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::would_block), ipAddress, port);
 				}
 
 				return;
 			}
 
-			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
-			#else
-				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
-			#endif
-
-			connMap_.erase(connKey.str());
+			unmapConnection(connKey.str());
     	}
 
 		errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::connection_aborted), ipAddress, port);
     }
 
-    void TCPServer::mapConnection(TCPConnectionWeakPtr connPtr)
+    void TCPServer::mapConnection(TCPConnectionPtr const & connPtr)
     {
     	std::stringstream connKey;
-    	if(TCPConnectionPtr connTmpPtr = connPtr.lock()) {
-			connKey << connTmpPtr->remoteIp() << ":" << connTmpPtr->remotePort();
+		connKey << connPtr->remoteIp() << ":" << connPtr->remotePort();
 
-			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
-			#else
-				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
-			#endif
+		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+		#else
+			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+		#endif
 
-			connMap_[connKey.str()] = connPtr;
+		connMap_[connKey.str()] = connPtr;
+    }
+
+    void TCPServer::unmapConnection(std::string const & connStr)
+    {
+		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+		#else
+			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+		#endif
+
+    	if(connMap_.count(connStr) != 0) {
+			connMap_.erase(connStr);
     	}
     }
+
+    bool TCPServer::findConnection(std::string const & connStr, TCPConnectionWeakPtr & connWeakPtr)
+    {
+		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+		#else
+			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+		#endif
+
+		if (connMap_.count(connStr) != 0) {
+			connWeakPtr = connMap_[connStr];
+			return true;
+		}
+
+		return false;
+    }
 }
-
-

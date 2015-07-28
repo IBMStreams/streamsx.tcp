@@ -29,7 +29,8 @@ namespace mcts
           remoteIp_(""), // initialize with empty string
           blockSize_(blockSize),
           outFormat_(outFormat),
-          numOutstandingWrites_(0)
+          numOutstandingWrites_(0),
+          isShutdown_(false)
     {
         __sync_fetch_and_add(&numConnections_, 1);
     }
@@ -37,16 +38,12 @@ namespace mcts
     TCPConnection::~TCPConnection()
     {
         __sync_fetch_and_sub(&numConnections_, 1);   
-        if (remoteIp_.size() == 0){
+        if (remoteIp_.size() == 0) {
             infoHandler_.handleInfo("rejected",
             						socket_.remote_endpoint().address().to_string(),
             						socket_.remote_endpoint().port());
-        }else{
-//			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-//				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
-//			#else
-//				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
-//			#endif
+        }
+        else {
 
             dataItem_.flushData(TCPConnection::outFormat_);
             if (dataItem_.hasCompleteItems()) {
@@ -54,7 +51,6 @@ namespace mcts
                 dataItem_.removeCompleteItems();
             } 
             infoHandler_.handleInfo("disconnected", remoteIp_, remotePort_);
-
         }
     }
 
@@ -96,22 +92,25 @@ namespace mcts
                                                     streams_boost::asio::placeholders::bytes_transferred));
     }
 
-    bool TCPConnection::shutdown_send_once(bool makeConnReadOnly)
+    void TCPConnection::shutdown_conn(bool makeConnReadOnly)
     {
-    	static bool shutdown_send_op = shutdown_send(makeConnReadOnly);
-    	return shutdown_send_op;
+    	if(!isShutdown_) {
+    		isShutdown_ = true;
+    		streams_boost::system::error_code ec;
+			if(makeConnReadOnly){
+				socket_.shutdown(streams_boost::asio::ip::tcp::socket::shutdown_send, ec);
+			}
+			else {
+				socket_.cancel(ec);
+				socket_.shutdown(streams_boost::asio::ip::tcp::socket::shutdown_both, ec);
+			}
+    	}
     }
 
     void TCPConnection::handleRead(streams_boost::system::error_code const & e,
                                 std::size_t bytesTransferred)
     {
         if (!e) {
-//			#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
-//				streams_boost::mutex::scoped_lock scoped_lock(mutex_);
-//			#else
-//				streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
-//			#endif
-
             dataItem_.addData(buffer_.data(), buffer_.data() + bytesTransferred, TCPConnection::blockSize_, TCPConnection::outFormat_);
             if (dataItem_.hasCompleteItems()) {
                 dataHandler_.handleData(dataItem_, remoteIp_, remotePort_);

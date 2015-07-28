@@ -59,7 +59,14 @@ namespace mcts
         /// Handle asynchronous write operation
         void handleWrite(SPL::blob & raw, bool delimited, std::string const & ipAddress, uint32_t port);
 
-        void mapConnection(TCPConnectionWeakPtr conn);
+        /// Add new connection to a map of connections
+        void mapConnection(TCPConnectionPtr const & connPtr);
+
+        /// Remove non-valid connection from a map of connections
+        void unmapConnection(std::string const & connStr);
+
+        /// Find a connection in a map of connections
+        bool findConnection(std::string const & connStr, TCPConnectionWeakPtr & connWeakPtr);
 
     private:
         /// Handle completion of an asynchronous accept operation
