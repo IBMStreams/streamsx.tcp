@@ -50,6 +50,7 @@ public:
 	// For handling string data from a stream and writing it to a client 
 	void handleWrite(std::string const & line, std::string const & ipAddress, uint32_t port);
 	void handleWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port);
+	void handleRawWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port);
 
 	// For handling errors when writing data to a client 
 	void handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port);

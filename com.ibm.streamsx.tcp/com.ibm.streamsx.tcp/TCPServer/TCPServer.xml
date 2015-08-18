@@ -137,6 +137,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
           <name>DataFormat</name>
           <value>block</value>
           <value>line</value>
+          <value>raw</value>
         </enumeration>
         <enumeration>
           <name>ShutdownMode</name>
@@ -221,7 +222,12 @@ The TCPServer operator throws an exception and terminates the operator in the fo
       </parameter>
       <parameter>
         <name>format</name>
-        <description>Format of the data on output port</description>
+        <description>Format of the data on output port
+
+* line - tuple data is transmitted in chucks terminated by a new line. If the final chunk is not terminated by a new line, a new line is provided. Input port should be of type TcpServerStrT. 
+* block - a 64 bit integer length is prepended to the begining of transmitted data. Input should be of type TcpServerBlobT 
+* raw -  data is transmitted with no adorment. Input port should be of type TcpServerBlobT.          
+</description>
         <optional>true</optional>
         <rewriteAllowed>false</rewriteAllowed>
         <expressionMode>CustomLiteral</expressionMode>

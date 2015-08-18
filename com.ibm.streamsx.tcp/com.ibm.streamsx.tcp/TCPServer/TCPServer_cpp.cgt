@@ -39,7 +39,7 @@ using namespace SPL;
   } else {
       $blockSize = $blockSize->getValueAt(0)->getCppExpression();
   }
-
+  
   my $keepAlive = $model->getParameterByName("keepAlive");
   # Apply default value for keepAlive.
   $keepAlive = $keepAlive ? $keepAlive->getValueAt(0)->getCppExpression() : "";
@@ -154,6 +154,7 @@ void MY_OPERATOR::handleData(std::string & line, std::string const & ipAddress, 
     <%}%>
 
 
+
     <%if ($oport0->getAttributeByName("srcIP")) {%>
         otuple0_->get_srcIP() = ipAddress;
     <%}%>
@@ -198,6 +199,11 @@ void MY_OPERATOR::handleWrite(std::string const & line, std::string const & ipAd
 void MY_OPERATOR::handleWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port)
 {
 	server_.handleWrite(const_cast<SPL::blob &>(raw), false, ipAddress, port);
+}
+// Send the data unadulterated - raw
+void MY_OPERATOR::handleRawWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port)
+{
+	server_.handleWrite(const_cast<SPL::blob &>(raw), true, ipAddress, port);
 }
 
 void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port)
@@ -246,19 +252,26 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 	const uint32_t destPort = (uint32_t)t.get_srcPort();
 	<%}%>
 
-	// if data is rstring, call handleWrite(string, ipAddress, port)	
+	
+	// if data is rstring, call handleWrite(string, ipAddress, port)
+	<%
+	# How do you get the value of format at compile time?? 
+	%>
 	<%if ($iport0->getAttributeByName("line")){%>
-		
-		std::string const & line = t.get_line();
+		std::string const & line = t.get_line();  // line
 		handleWrite(line, destIp, destPort);
-		
-	// else if idata is a blob, call handleWrite(blob, ipAddress, port)		
-	<%}else{%>
-		
-		SPL::blob const & block = t.get_block();
-		handleWrite(block, destIp, destPort);
+	<%} else {%>
+     // else if idata is a blob, call handleWrite(blob, ipAddress, port)
+		SPL::blob const & block = t.get_block();        
+        if ("block" == param$format$0) {
+			handleWrite(block, destIp, destPort);  // block 
+			// std::cout << "block" << std::endl;			
+		} else {
+			handleRawWrite(block, destIp, destPort);  // raw
+			// std::cout << "raw" << std::endl;
+		}	 
 	<%}%>
-	<%}%>
+	<%}%>	
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
