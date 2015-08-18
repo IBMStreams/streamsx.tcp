@@ -60,9 +60,10 @@ namespace mcts
                         completeItems_.push_back(std::string(&buffer_[0], &buffer_[0] + size));
                         buffer_.clear();
                     }
-                } else {
+                } else {		  
                 	size_t size = buffer_.size();
-                    if (buffer_[size-1]=='\r')
+			// + bounds check
+			if ((size !=0) && (buffer_[size-1]=='\r'))
                         size--;
                     completeItems_.push_back(std::string(&buffer_[0], &buffer_[0] + size));
                     buffer_.clear();
@@ -83,8 +84,8 @@ namespace mcts
     void DataItem::flushData(outFormat_t outFormat)
     {
 	size_t size = buffer_.size();
-	// remove \r in case of line format
-	if ((outFormat == line) && (buffer_[size]=='\r'))
+	// + bounds check then - remove \r in case of line format
+	if ( (size!=0) && (outFormat == line) && (buffer_[size]=='\r'))
 			size--;
 	completeItems_.push_back(std::string(&buffer_[0], &buffer_[0] +  size));
 	buffer_.clear();
