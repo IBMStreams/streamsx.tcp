@@ -1,0 +1,97 @@
+namespace sample;
+
+use com.ibm.streamsx.tcp::*;
+
+use com.ibm.streamsx.tcp::TCPServer ;
+use com.ibm.streamsx.tcp::TcpServerBlobT ;
+use com.ibm.streamsx.tcp::TcpServerStatusT ;
+use com.ibm.streamsx.tcp::TcpServerStrT ;
+/*
+ * Example of using the format parameter of on TCPServer opertor. 
+ * What todo; 
+ * 1) Build this sample.
+ * 2) Deploy it. 
+ * 3) Get the IP address of the node your running on. 
+ * 4) Use nc (netcat) to access the node/port, for example. 
+ *        nc 192.12.23.134 8819  > /tmp/log.out
+ * 5) Wait ~ 10 seconds for the data to be sent, I have delay.
+ *
+ * What to look for... 
+ *   The log.out file should have 'tmpStr' below repeated 10 times, 
+ *   Their should be NO extra characters between lines, that 
+ *   is no count and no '\n'
+ * 
+ */
+composite TCPServerSendRaw
+{
+	param
+		expression<uint32> $PORT : 8819u ;
+		expression<rstring> $ADDRESS : getIPAddress() ;
+	graph
+		() as FileSink_2 = FileSink(TcpConnect as InputStreamConnect)
+		{
+			param
+				file : "/dev/stdout" ;
+				format : csv ;
+				flush : 1u ;
+		}
+
+		() as FileSink_1 = FileSink(TcpData as InputStreamName0)
+		{
+			param
+				file : "/tmp/outputPort.csv" ;
+				format : csv ;
+				flush : 1u ;
+		}
+
+		(stream<TcpServerStrT> TcpData ; stream<TcpServerStatusT> TcpConnect) as
+			TCPServerTransmit = TCPServer(Delay_5_out0)
+		{
+			param
+				port : $PORT ;
+				threadPoolSize : 10u ;
+				format : TCPServer.raw ; 	
+				connectionCap : 5u ;
+				blockSize : 4096u ;
+				address : $ADDRESS ;
+		}
+
+		(stream<TcpServerBlobT> Custom_4_out0 as outP) as Custom_4 = Custom(TcpConnect as inP) // blob ?  v2
+
+		{
+			logic
+				state :
+				{
+					mutable TcpServerBlobT outMsg ;         // blob   v2
+					mutable int64 idx = 0 ;
+					mutable rstring tmpStr ;
+				}
+
+				onTuple TcpConnect :
+				{
+					if(inP.status != "connected")
+					{
+						return ;
+					}
+
+					assignFrom(outMsg, inP) ;
+					for(int32 i in range(1, 10))
+					{
+						tmpStr =
+							"123456789012345678901234567890123456789012345678bbb9012345678901234567890123456789012345678901234567890:"
+							+(rstring) idx ++ ;
+						println("msg:" + tmpStr) ;
+						outMsg.block = convertToBlob(tmpStr) ;// blob ? v2
+						submit(outMsg, outP) ;
+					}
+
+				}
+		}
+
+		(stream<Custom_4_out0> Delay_5_out0) as Delay_5 = Delay(Custom_4_out0)
+		{
+			param
+				delay : 1.0 ;
+		}
+
+}
