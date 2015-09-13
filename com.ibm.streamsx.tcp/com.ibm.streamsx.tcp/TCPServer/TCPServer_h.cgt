@@ -48,7 +48,11 @@ public:
     void handleInfo(std::string const & status, std::string const & ipAddress, uint32_t port);
     
 	// For handling string data from a stream and writing it to a client 
+    template<mcts::outFormat_t Format>
 	void handleWrite(std::string const & line, std::string const & ipAddress, uint32_t port);
+
+	// For handling blob data from a stream and writing it to a client 
+    template<mcts::outFormat_t Format>
 	void handleWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port);
 
 	// For handling errors when writing data to a client 

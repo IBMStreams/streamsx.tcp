@@ -43,7 +43,8 @@ namespace mcts
         streams_boost::array<streams_boost::asio::const_buffer, 2> getBuffers();
 
         /// Adopt blob data to the buffer (no copy).
-        void setData(SPL::blob & raw, bool delimited);
+        template<outFormat_t Format>
+        void setData(SPL::blob & raw);
 
         void handleError(streams_boost::system::error_code const & e, std::string const & ip, uint32_t port);
 

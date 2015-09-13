@@ -162,7 +162,8 @@ namespace mcts
         }
     }
 
-    void TCPServer::handleWrite(SPL::blob & raw, bool delimited, std::string const & ipAddress, uint32_t port)
+    template<outFormat_t Format>
+    void TCPServer::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
     {
     	std::stringstream connKey;
     	connKey << ipAddress << ":" << port;
@@ -185,10 +186,10 @@ namespace mcts
 				if (*numOutstandingWritesPtr <= maxUnreadResponseCount_) {
 					__sync_fetch_and_add(numOutstandingWritesPtr, 1);
 
-					asyncDataItemPtr->setData(raw, delimited);
+					asyncDataItemPtr->setData<Format>(raw);
 
-					if(delimited) {
-						async_write(connPtr->socket(), asyncDataItemPtr->getBuffer(),
+					if(Format == mcts::block) {
+						async_write(connPtr->socket(), asyncDataItemPtr->getBuffers(),
 								connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
 														streams_boost::asio::placeholders::error,
 														ipAddress, port)
@@ -196,7 +197,7 @@ namespace mcts
 						);
 					}
 					else {
-						async_write(connPtr->socket(), asyncDataItemPtr->getBuffers(),
+						async_write(connPtr->socket(), asyncDataItemPtr->getBuffer(),
 								connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
 														streams_boost::asio::placeholders::error,
 														ipAddress, port)
@@ -219,6 +220,10 @@ namespace mcts
 
 		errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::connection_aborted), ipAddress, port);
     }
+
+    template void TCPServer::handleWrite<line>(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
+    template void TCPServer::handleWrite<block>(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
+    template void TCPServer::handleWrite<raw>(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
 
     void TCPServer::mapConnection(TCPConnectionPtr const & connPtr)
     {

@@ -52,11 +52,12 @@ namespace mcts
 //		return buffer_.getSize();
 //	}
 
-	void AsyncDataItem::setData(SPL::blob & raw, bool delimited)
+    template<outFormat_t Format>
+	void AsyncDataItem::setData(SPL::blob & raw)
 	{
 		uint64_t size = raw.getSize();
 
-		if(!delimited) {
+		if(Format == mcts::block) {
 			bufferSize_.setOCursor(0);
 			bufferSize_.addUInt64(size);
 		}
@@ -69,6 +70,10 @@ namespace mcts
 		}
 
 	}
+
+    template void AsyncDataItem::setData<line>(SPL::blob & raw);
+    template void AsyncDataItem::setData<block>(SPL::blob & raw);
+    template void AsyncDataItem::setData<raw>(SPL::blob & raw);
 
 	void AsyncDataItem::handleError(streams_boost::system::error_code const & e, std::string const & ip, uint32_t port)
     {

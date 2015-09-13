@@ -186,18 +186,20 @@ void MY_OPERATOR::handleInfo(std::string const & status, std::string const & ipA
     <%}%>
 }
 
+template<mcts::outFormat_t Format>
+void MY_OPERATOR::handleWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port)
+{
+	server_.handleWrite<Format>(const_cast<SPL::blob &>(raw), ipAddress, port);
+}
+
+template<mcts::outFormat_t Format>
 void MY_OPERATOR::handleWrite(std::string const & line, std::string const & ipAddress, uint32_t port)
 {
 	SPL::blob raw(reinterpret_cast<unsigned char const *>(line.data()), line.size());	
 	if (!streams_boost::algorithm::ends_with(line, "\n")){
 		raw += atoi("\n");
 	}	
-	server_.handleWrite(raw, true, ipAddress, port);
-}
-
-void MY_OPERATOR::handleWrite(SPL::blob const & raw, std::string const & ipAddress, uint32_t port)
-{
-	server_.handleWrite(const_cast<SPL::blob &>(raw), false, ipAddress, port);
+	server_.handleWrite<mcts::line>(raw, ipAddress, port);
 }
 
 void MY_OPERATOR::handleError(const streams_boost::system::error_code& e, std::string const & ipAddress, uint32_t port)
@@ -238,26 +240,32 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 	
 	// get dest server
 	<%if ($iport0->getAttributeByName("srcIP")){%>
-	const std::string destIp = t.get_srcIP();
+	const std::string & destIp = t.get_srcIP();
 	<%}%>
 	
 	// get dest IP
-	<%if ($iport0->getAttributeByName("srcPort")){%>
+	<%if ($iport0->getAttributeByName("srcPort")) {%>
 	const uint32_t destPort = (uint32_t)t.get_srcPort();
 	<%}%>
 
-	// if data is rstring, call handleWrite(string, ipAddress, port)	
-	<%if ($iport0->getAttributeByName("line")){%>
+	// if data is rstring, call handleWrite<mcts::line>(string, ipAddress, port)	
+	<%if ($iport0->getAttributeByName("line")) {%>
 		
 		std::string const & line = t.get_line();
-		handleWrite(line, destIp, destPort);
-		
-	// else if idata is a blob, call handleWrite(blob, ipAddress, port)		
-	<%}else{%>
+		handleWrite<mcts::line>(line, destIp, destPort);
+
+	// else if idata is a block, call handleWrite<mcts::block>(blob, ipAddress, port)		
+	<%} elsif ($iport0->getAttributeByName("block")) {%>
 		
 		SPL::blob const & block = t.get_block();
-		handleWrite(block, destIp, destPort);
-	<%}%>
+		handleWrite<mcts::block>(block, destIp, destPort);
+
+	// else if idata is a raw, call handleWrite<mcts::raw>(blob, ipAddress, port)		
+	<%} else {%>
+		
+		SPL::blob const & raw = t.get_raw();
+		handleWrite<mcts::raw>(raw, destIp, destPort);
+	<%}%>	
 	<%}%>
 }
 

@@ -57,7 +57,8 @@ namespace mcts
         void stop();
         
         /// Handle asynchronous write operation
-        void handleWrite(SPL::blob & raw, bool delimited, std::string const & ipAddress, uint32_t port);
+        template<outFormat_t Format>
+        void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
 
         /// Add new connection to a map of connections
         void mapConnection(TCPConnectionPtr const & connPtr);

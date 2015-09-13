@@ -19,7 +19,7 @@ namespace mcts
 // output format
 // line: rstring
 // block: blob
-typedef enum {line, block} outFormat_t;
+typedef enum {line, block, raw} outFormat_t;
 
  class DataItem
     {

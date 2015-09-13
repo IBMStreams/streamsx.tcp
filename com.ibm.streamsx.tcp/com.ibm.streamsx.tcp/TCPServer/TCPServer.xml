@@ -266,7 +266,7 @@ The `TCPServer` operator has one optional input port.  The schema of the input p
 The first output port is mandatory and must contain a tuple with one mandatory and up to two optional attributes. The output port punctuation mode is Generating. The TCPServer operator outputs a window marker punctuation when an existing connection is released. The mandatory attribute must have type rstring (for line attribute) or blob (for block attribute).
 
 * mandatory
-  * attribute name line and type rstringor
+  * attribute name line and type rstring
   * attribute name block and type blob
 * optional
   * attribute name srcIP and type rstring

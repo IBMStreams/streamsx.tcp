@@ -32,6 +32,7 @@ sub verifyInputPort($) {
     # attributes for port 0: name => type, [m|o] (mandatory "m" or optional "o")
 	my %attributes = (	line => ["rstring","m"],
 						block => ["blob","m"],
+						raw => ["blob","m"],
 						srcIP => ["rstring","o"],
 						srcPort => ["uint32","o"]);
 
