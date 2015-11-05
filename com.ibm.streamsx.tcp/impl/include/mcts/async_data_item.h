@@ -31,10 +31,10 @@ namespace mcts
 		AsyncDataItem(Handler handler);
 
         /// Return valid connection.
-        bool getValidConnection(TCPConnectionPtr & connPtr);
+//        bool getValidConnection(TCPConnectionPtr & connPtr);
 
         /// Return valid connection.
-        void setConnectionPtr(TCPConnectionWeakPtr const & connWeakPtr);
+//        void setConnectionPtr(TCPConnectionWeakPtr const & connWeakPtr);
 
         /// Get a buffer to string.
         streams_boost::asio::const_buffers_1 getBuffer();
@@ -47,10 +47,11 @@ namespace mcts
         void setData(SPL::blob & raw);
 
         void handleError(streams_boost::system::error_code const & e, std::string const & ip, uint32_t port);
+        void handleError(streams_boost::system::error_code const & e, std::string const & ip, uint32_t port, TCPConnectionWeakPtr connWeakPtr);
 
     private:
         /// Reference to bounded connection.
-        TCPConnectionWeakPtr connWeakPtr_;
+//        TCPConnectionWeakPtr connWeakPtr_;
 
         /// The unique buffer size to prepend to the data.
         SPL::NetworkByteBuffer bufferSize_;

@@ -17,7 +17,10 @@ sub verify($)
 	if ($iport)
 	{
 		verifyInputPort($model);
-	}	
+	}
+	else {
+		verifyResponseParams($model);
+	}
 }
 
 sub verifyInputPort($) {
@@ -130,4 +133,19 @@ my ($model) = @_;
 
 }
 
+sub verifyResponseParams($){
+
+my ($model) = @_;
+	if ($model->getParameterByName("broadcastResponse")) {
+	 	SPL::CodeGen::warnln("parameter 'broadcastResponse' used without input port defined - will be ignored")
+	}
+	if ($model->getParameterByName("disableDuplexConnection")) {
+	 	SPL::CodeGen::warnln("parameter 'disableDuplexConnection' used without input port defined - will be ignored")
+	}
+	if ($model->getParameterByName("maxUnreadResponseCount")) {
+	 	SPL::CodeGen::warnln("parameter 'maxUnreadResponseCount' used without input port defined - will be ignored")
+	}
+}
+
 1;
+

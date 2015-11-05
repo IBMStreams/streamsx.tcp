@@ -34,6 +34,7 @@ namespace mcts
                          std::size_t maxUnreadResponseCount,
                          uint32_t blockSize,
                          outFormat_t outFormat,
+                         bool broadcastResponse,
                          bool isDuplexConnection,
                          bool makeConnReadOnly,
                          DataHandler::Handler dHandler,
@@ -54,6 +55,7 @@ namespace mcts
           errorHandler_(eHandler),
           metricsHandler_(mHandler),
           outFormat_(outFormat),
+          broadcastResponse_(broadcastResponse),
           isDuplexConnection_(isDuplexConnection),
           makeConnReadOnly_(makeConnReadOnly),
     	nextConnection_(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
@@ -165,60 +167,73 @@ namespace mcts
     template<outFormat_t Format>
     void TCPServer::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
     {
-    	std::stringstream connKey;
-    	connKey << ipAddress << ":" << port;
-		TCPConnectionWeakPtr connWeakPtr;
+//    	std::string connStr = broadcastResponse_ ? "" : createConnectionStr(ipAddress, port);
 
-		const bool connExist = findConnection(connKey.str(), connWeakPtr);
+//		std::cerr << "writing to: " << connStr << std::endl;
 
-    	if(connExist) {
+//		TCPConnectionWeakPtr connWeakPtr;
+//		bool connExist = false;
 
-    		AsyncDataItemPtr asyncDataItemPtr = streams_boost::make_shared<AsyncDataItem>(errorHandler_);
-    		asyncDataItemPtr->setConnectionPtr(connWeakPtr);
-    		TCPConnectionPtr connPtr;
+		TCPConnectionWeakPtrMap::iterator iter = broadcastResponse_ ? findFirstConnection() : findConnection(createConnectionStr(ipAddress, port));
 
-    		/// Validate existing connection
-			if (asyncDataItemPtr->getValidConnection(connPtr)) {
+    	if(iter == connMap_.end()) {
+			if(!broadcastResponse_) errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::connection_aborted), ipAddress, port);
+    	}
 
-				uint32_t * numOutstandingWritesPtr = connPtr->getNumOutstandingWritesPtr();
+		else {
+			AsyncDataItemPtr asyncDataItemPtr = streams_boost::make_shared<AsyncDataItem>(errorHandler_);
+			asyncDataItemPtr->setData<Format>(raw);
 
-				/// Check if client consumes data from a socket
-				if (*numOutstandingWritesPtr <= maxUnreadResponseCount_) {
-					__sync_fetch_and_add(numOutstandingWritesPtr, 1);
+    		do {
+				TCPConnectionWeakPtr connWeakPtr = iter->second;
+				TCPConnectionPtr connPtr = connWeakPtr.lock();
 
-					asyncDataItemPtr->setData<Format>(raw);
+				/// Validate existing connection
+				if (connPtr && connPtr->socket().is_open()) {
 
-					if(Format == mcts::block) {
-						async_write(connPtr->socket(), asyncDataItemPtr->getBuffers(),
-								connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
-														streams_boost::asio::placeholders::error,
-														ipAddress, port)
-								)
-						);
+					uint32_t * numOutstandingWritesPtr = connPtr->getNumOutstandingWritesPtr();
+
+					/// Check if client consumes data from a socket
+					if (*numOutstandingWritesPtr <= maxUnreadResponseCount_) {
+						__sync_fetch_and_add(numOutstandingWritesPtr, 1);
+
+						if(Format == mcts::block) {
+							async_write(connPtr->socket(), asyncDataItemPtr->getBuffers(),
+									connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+															streams_boost::asio::placeholders::error,
+															connPtr->remoteIp(), connPtr->remotePort(), connWeakPtr)
+									)
+							);
+						}
+						else {
+							async_write(connPtr->socket(), asyncDataItemPtr->getBuffer(),
+									connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
+															streams_boost::asio::placeholders::error,
+															connPtr->remoteIp(), connPtr->remotePort(), connWeakPtr)
+									)
+							);
+						}
+
+						iter++;
 					}
 					else {
-						async_write(connPtr->socket(), asyncDataItemPtr->getBuffer(),
-								connPtr->strand().wrap( streams_boost::bind(&AsyncDataItem::handleError, asyncDataItemPtr,
-														streams_boost::asio::placeholders::error,
-														ipAddress, port)
-								)
-						);
+						connPtr->shutdown_conn(makeConnReadOnly_);
+						if(makeConnReadOnly_) {
+							iter++;
+						}
+						else {
+							iter = unmapConnection(iter);
+						}
+
+						errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::would_block), ipAddress, port, connWeakPtr);
 					}
 				}
 				else {
-					connPtr->shutdown_conn(makeConnReadOnly_);
-					if(!makeConnReadOnly_) unmapConnection(connKey.str());
-
-					errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::would_block), ipAddress, port);
+					iter = unmapConnection(iter);
 				}
-
-				return;
-			}
-
-			unmapConnection(connKey.str());
+			} while (broadcastResponse_ && (iter != connMap_.end()));
     	}
 
-		errorHandler_.handleError(streams_boost::system::error_code(streams_boost::asio::error::connection_aborted), ipAddress, port);
     }
 
     template void TCPServer::handleWrite<line>(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
@@ -227,8 +242,7 @@ namespace mcts
 
     void TCPServer::mapConnection(TCPConnectionPtr const & connPtr)
     {
-    	std::stringstream connKey;
-		connKey << connPtr->remoteIp() << ":" << connPtr->remotePort();
+    	std::string connStr = createConnectionStr(connPtr->remoteIp(), connPtr->remotePort());
 
 		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
 			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
@@ -236,10 +250,11 @@ namespace mcts
 			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
 		#endif
 
-		connMap_[connKey.str()] = connPtr;
+		connMap_[connStr] = connPtr;
     }
 
-    void TCPServer::unmapConnection(std::string const & connStr)
+//    void TCPServer::unmapConnection(std::string const & connStr)
+    TCPConnectionWeakPtrMap::iterator TCPServer::unmapConnection(TCPConnectionWeakPtrMap::iterator iter)
     {
 		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
 			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
@@ -247,12 +262,11 @@ namespace mcts
 			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
 		#endif
 
-    	if(connMap_.count(connStr) != 0) {
-			connMap_.erase(connStr);
-    	}
+		return connMap_.erase(iter);
     }
 
-    bool TCPServer::findConnection(std::string const & connStr, TCPConnectionWeakPtr & connWeakPtr)
+//    bool TCPServer::findConnection(std::string const & connStr, TCPConnectionWeakPtr & connWeakPtr)
+    TCPConnectionWeakPtrMap::iterator TCPServer::findConnection(std::string const & connStr)
     {
 		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
 			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
@@ -260,11 +274,33 @@ namespace mcts
 			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
 		#endif
 
-		if (connMap_.count(connStr) != 0) {
-			connWeakPtr = connMap_[connStr];
-			return true;
-		}
+//		if (connMap_.count(connStr) != 0) {
+//			connWeakPtr = connMap_[connStr];
+//			return true;
+//		}
 
-		return false;
+		return connMap_.find(connStr);
+    }
+
+    TCPConnectionWeakPtrMap::iterator TCPServer::findFirstConnection()
+    {
+		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
+			streams_boost::mutex::scoped_lock scoped_lock(mutex_);
+		#else
+			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
+		#endif
+
+		return connMap_.begin();
+    }
+
+    inline const std::string TCPServer::createConnectionStr(std::string const & ipAddress, uint32_t port)
+    {
+		namespace karma = streams_boost::spirit::karma;
+
+		std::string connStr;
+		std::back_insert_iterator<std::string> connStrIter(connStr);
+		karma::generate(connStrIter, karma::string << ':' << karma::uint_, ipAddress, port);
+
+		return connStr;
     }
 }

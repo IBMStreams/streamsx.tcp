@@ -53,6 +53,10 @@ using namespace SPL;
   my $disableDuplexConnection = $model->getParameterByName("disableDuplexConnection");
   $makeConnReadOnly = 'false' if ($disableDuplexConnection && $disableDuplexConnection->getValueAt(0)->getSPLExpression() eq 'shutdown');
 
+  # Apply default value for broadcastResponse.
+  my $broadcastResponse = $model->getParameterByName("broadcastResponse");
+  $broadcastResponse = $broadcastResponse ? $broadcastResponse->getValueAt(0)->getCppExpression() : 'false';
+
 	my $oport0 = $model->getOutputPortAt(0);
   	my $oport1 = $model->getOutputPortAt(1);
   	
@@ -86,7 +90,7 @@ MY_OPERATOR::MY_OPERATOR()
     : server_(
               <%=$address%>, 
               <%=$port%>, <%=$threadPoolSize%>, <%=$connectionCap%>, <%=$maxUnreadResponseCount%>,
-              <%=$blockSize%>,  MY_OPERATOR::outFormat_, <%=defined($iport0) ? 'true' : 'false'%>, <%=$makeConnReadOnly%>,
+              <%=$blockSize%>,  MY_OPERATOR::outFormat_, <%=$broadcastResponse%>, <%=defined($iport0) ? 'true' : 'false'%>, <%=$makeConnReadOnly%>,
               streams_boost::bind(&MY_OPERATOR::handleData, this, _1, _2, _3) ,
               streams_boost::bind(&MY_OPERATOR::handleError, this, _1, _2, _3) ,
               streams_boost::bind(&MY_OPERATOR::handleInfo, this, _1, _2, _3) ,

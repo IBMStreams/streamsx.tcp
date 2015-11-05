@@ -13,6 +13,7 @@
 #include <tr1/unordered_map>
 #include <streams_boost/asio.hpp>
 #include <streams_boost/shared_ptr.hpp>
+#include <streams_boost/spirit/include/karma.hpp>
 #include <streams_boost/thread/mutex.hpp>
 
 #include "mcts/async_data_item.h"
@@ -25,6 +26,8 @@
 
 namespace mcts 
 {
+	typedef std::tr1::unordered_map<std::string, TCPConnectionWeakPtr> TCPConnectionWeakPtrMap;
+
     /// Class for multi-threaded TCP server
     class TCPServer
     {
@@ -43,7 +46,7 @@ namespace mcts
         /// @param handler that will send connection status infos
         TCPServer(std::string const & address, uint32_t port, 
                   std::size_t threadPoolSize, std::size_t maxConnections, std::size_t maxUnreadResponseCount,
-                  uint32_t blockSize, outFormat_t outFormat, bool isDuplexConnection, bool makeConnReadOnly,
+                  uint32_t blockSize, outFormat_t outFormat, bool broadcastResponse, bool isDuplexConnection, bool makeConnReadOnly,
                   DataHandler::Handler dhandler, AsyncDataItem::Handler eHandler, InfoHandler::Handler iHandler, MetricsHandler::Handler mHandler);
 
         /// Set the keep alive socket options
@@ -64,10 +67,16 @@ namespace mcts
         void mapConnection(TCPConnectionPtr const & connPtr);
 
         /// Remove non-valid connection from a map of connections
-        void unmapConnection(std::string const & connStr);
+//        void unmapConnection(std::string const & connStr);
+        TCPConnectionWeakPtrMap::iterator unmapConnection(TCPConnectionWeakPtrMap::iterator iter);
 
         /// Find a connection in a map of connections
-        bool findConnection(std::string const & connStr, TCPConnectionWeakPtr & connWeakPtr);
+//        bool findConnection(std::string const & connStr, TCPConnectionWeakPtr & connWeakPtr);
+        TCPConnectionWeakPtrMap::iterator findConnection(std::string const & connStr);
+        TCPConnectionWeakPtrMap::iterator findFirstConnection();
+
+        /// Create a connection string
+        inline const std::string createConnectionStr(std::string const & ipAddress, uint32_t port);
 
     private:
         /// Handle completion of an asynchronous accept operation
@@ -117,6 +126,9 @@ namespace mcts
         outFormat_t outFormat_;
 
         /// Is the connection duplex.
+        bool broadcastResponse_;
+
+        /// Is the connection duplex.
         bool isDuplexConnection_;
 
         /// When disabled - make the connection read only or shutdown..
@@ -126,7 +138,7 @@ namespace mcts
         TCPConnectionPtr nextConnection_;
 
         /// TCPConnection map to handle duplex communication
-        std::tr1::unordered_map<std::string, TCPConnectionWeakPtr> connMap_;
+        TCPConnectionWeakPtrMap connMap_;
 
         streams_boost::mutex mutex_;
     };  

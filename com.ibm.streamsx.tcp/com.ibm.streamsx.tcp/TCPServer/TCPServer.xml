@@ -229,6 +229,15 @@ The TCPServer operator throws an exception and terminates the operator in the fo
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
+        <name>broadcastResponse</name>
+        <description>This optional parameter with type boolean specifies the whether a response should be broadcasted to all clients at once.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
         <name>maxUnreadResponseCount</name>
         <description>This optional parameter with type uint32 specifies the maximum number of unread responses until the duplex connection is disabled.</description>
         <optional>true</optional>

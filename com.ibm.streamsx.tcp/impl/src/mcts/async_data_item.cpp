@@ -12,19 +12,19 @@ namespace mcts
 
 	AsyncDataItem::AsyncDataItem(Handler handler) : bufferSize_(sizeof(uint64_t)), handler_(handler) {}
 
-	bool AsyncDataItem::getValidConnection(TCPConnectionPtr & connPtr)
-	{
-		if(connPtr = connWeakPtr_.lock()) {
-			return connPtr->socket().is_open();
-		}
+//	bool AsyncDataItem::getValidConnection(TCPConnectionPtr & connPtr)
+//	{
+//		if(connPtr = connWeakPtr_.lock()) {
+//			return connPtr->socket().is_open();
+//		}
+//
+//		return false;
+//	}
 
-		return false;
-	}
-
-    void AsyncDataItem::setConnectionPtr(TCPConnectionWeakPtr const & connWeakPtr)
-    {
-    	connWeakPtr_ = connWeakPtr;
-    }
+//    void AsyncDataItem::setConnectionPtr(TCPConnectionWeakPtr const & connWeakPtr)
+//    {
+//    	connWeakPtr_ = connWeakPtr;
+//    }
 
     streams_boost::asio::const_buffers_1 AsyncDataItem::getBuffer()
     {
@@ -77,7 +77,12 @@ namespace mcts
 
 	void AsyncDataItem::handleError(streams_boost::system::error_code const & e, std::string const & ip, uint32_t port)
     {
-		if(TCPConnectionPtr connPtr = connWeakPtr_.lock()) {
+		handler_( e, ip,  port);
+    }
+
+	void AsyncDataItem::handleError(streams_boost::system::error_code const & e, std::string const & ip, uint32_t port, TCPConnectionWeakPtr connWeakPtr)
+    {
+		if(TCPConnectionPtr connPtr = connWeakPtr.lock()) {
 			if (!e) __sync_fetch_and_sub(connPtr->getNumOutstandingWritesPtr(), 1);
 		}
 
