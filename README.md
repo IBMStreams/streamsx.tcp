@@ -11,3 +11,9 @@ technicalities about the TCPServer operator.
 <li>com.ibm.streamsx.tcp/README</li>
 <li>com.ibm.streamsx.tcp/doc/com.ibm.streamsx.tcp.Multiconnection-Tcp-Server.html</li>
 </ol>
+
+To learn more about Streams:
+* [IBM Streams on Github](http://ibmstreams.github.io)
+* [Introduction to Streams Quick Start Edition](http://ibmstreams.github.io/streamsx.documentation/docs/4.1/qse-intro/)
+* [Streams Getting Started Guide](http://ibmstreams.github.io/streamsx.documentation/docs/4.1/qse-getting-started/)
+* [StreamsDev](https://developer.ibm.com/streamsdev/)
