@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.0.1.0" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <toolkit name="TcpServerSample" requiredProductVersion="2.0.0" version="1.0.0">
+    <description/>
+    <uriTable>
+      <uri index="2" value="sample/TCPSender.spl"/>
+      <uri index="1" value="sample/TCPReceiver.spl"/>
+    </uriTable>
+    <namespace name="sample">
+      <compositeOp column="11" line="17" name="TCPReceiver" potentialMain="true" uriIndex="1"/>
+      <compositeOp column="11" line="18" name="TCPSender" potentialMain="true" uriIndex="2"/>
+    </namespace>
+    <dependency>
+      <common:name>com.ibm.streamsx.tcp</common:name>
+      <common:version>2.0.0</common:version>
+    </dependency>
+    <sabFiles>
+      <ti:include path="toolkit.xml" root="toolkitDir"/>
+      <ti:include path="impl/java/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/java/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/nl/*.dat" root="toolkitDir"/>
+      <ti:include path="etc/**" root="toolkitDir"/>
+      <ti:include path="lib/**" root="toolkitDir"/>
+      <ti:include path="nl/**" root="toolkitDir"/>
+      <ti:include path="opt/**" root="toolkitDir"/>
+    </sabFiles>
+  </toolkit>
+
+</toolkitModel>

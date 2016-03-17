@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.0.1.0" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <toolkit name="com.ibm.streamsx.tcpclient" requiredProductVersion="3.0.0" version="1.0.0">
+    <description/>
+    <uriTable>
+      <uri index="2" value="application/SingleClientBlobMain.spl"/>
+      <uri index="5" value="application/SingleClientMain.spl"/>
+      <uri index="3" value="application/TcpServerMain.spl"/>
+      <uri index="6" value="application/TcpBlobServerMain.spl"/>
+      <uri index="4" value="application/TcpServerMTMain.spl"/>
+      <uri index="1" value="application/MultipleClientsMain.spl"/>
+      <uri index="7" value="com.ibm.streamsx.tcpclient/TcpDuplexClient"/>
+    </uriTable>
+    <namespace name="application">
+      <compositeOp column="11" line="11" name="MultipleClientsMain" potentialMain="true" uriIndex="1">
+        <parameter defaultValue="&quot;d0101b09&quot;" metaType="Expression" name="host" optional="true" type="&lt;rstring>"/>
+        <parameter defaultValue="22222" metaType="Expression" name="port" optional="true" type="&lt;int32>"/>
+        <parameter defaultValue="20000u" metaType="Expression" name="numIter" optional="true" type="&lt;uint32>"/>
+        <parameter defaultValue="0.001" metaType="Expression" name="period" optional="true" type="&lt;float64>"/>
+      </compositeOp>
+      <compositeOp column="11" line="5" name="SingleClientBlobMain" potentialMain="true" uriIndex="2">
+        <parameter defaultValue="&quot;d0101b09&quot;" metaType="Expression" name="host" optional="true" type="&lt;rstring>"/>
+        <parameter defaultValue="22222" metaType="Expression" name="port" optional="true" type="&lt;int32>"/>
+        <parameter defaultValue="10000000u" metaType="Expression" name="numIter" optional="true" type="&lt;uint32>"/>
+      </compositeOp>
+      <compositeOp column="11" line="10" name="TcpServerMain" potentialMain="true" uriIndex="3"/>
+      <compositeOp column="11" line="5" name="TcpServerMTMain" potentialMain="true" uriIndex="4"/>
+      <compositeOp column="11" line="20" name="SingleClientMain" potentialMain="true" uriIndex="5">
+        <parameter defaultValue="&quot;d0101b09&quot;" metaType="Expression" name="host" optional="true" type="&lt;rstring>"/>
+        <parameter defaultValue="22222" metaType="Expression" name="port" optional="true" type="&lt;int32>"/>
+        <parameter defaultValue="10000000u" metaType="Expression" name="numIter" optional="true" type="&lt;uint32>"/>
+      </compositeOp>
+      <compositeOp column="11" line="5" name="TcpBlobServerMain" potentialMain="true" uriIndex="6"/>
+      <function column="1" line="9" name="getRequest" native="false" public="true" returnType="rstring" uriIndex="5">
+        <prototype>public rstring getRequest(rstring clientId)</prototype>
+        <parameter name="clientId" type="rstring"/>
+      </function>
+      <function column="1" line="15" name="getResponse" native="false" public="true" returnType="rstring" uriIndex="5">
+        <prototype>public rstring getResponse(rstring request)</prototype>
+        <parameter name="request" type="rstring"/>
+      </function>
+    </namespace>
+    <namespace name="com.ibm.streamsx.tcpclient">
+      <primitiveOp language="Java" modelUriIndex="7" name="TcpDuplexClient" public="true">
+        <description>Java Operator TcpDuplexClient</description>
+        <parameter expressionMode="Constant" name="vmArg" optional="true" type="rstring">
+          <description>Command line options passed to the Java Virtual Machine at startup</description>
+        </parameter>
+        <parameter cardinality="1" expressionMode="AttributeFree" name="host" optional="false" type="rstring">
+          <description/>
+        </parameter>
+        <parameter cardinality="1" expressionMode="AttributeFree" name="port" optional="false" type="int32">
+          <description/>
+        </parameter>
+        <parameter cardinality="1" expressionMode="AttributeFree" name="readResponse" optional="true" type="boolean">
+          <description/>
+        </parameter>
+        <parameter cardinality="1" expressionMode="AttributeFree" name="binary" optional="true" type="boolean">
+          <description/>
+        </parameter>
+        <inputPort maxNumPorts="1" minNumPorts="1" optional="false" windowPunctInputMode="Oblivious">
+          <description>Port that ingests tuples</description>
+          <windowPolicy>NonWindowed</windowPolicy>
+        </inputPort>
+        <inputPort minNumPorts="0" optional="true" windowPunctInputMode="Oblivious">
+          <windowPolicy>NonWindowed</windowPolicy>
+        </inputPort>
+        <outputPort expressionMode="Nonexistent" maxNumPorts="1" minNumPorts="1" optional="false" windowPunctOutputMode="Generating">
+          <description>Port that produces tuples</description>
+        </outputPort>
+        <outputPort expressionMode="Nonexistent" minNumPorts="0" optional="true" windowPunctOutputMode="Generating"/>
+      </primitiveOp>
+    </namespace>
+    <dependency>
+      <common:name>com.ibm.streamsx.tcp</common:name>
+      <common:version>[1.1.0,2.0.0)</common:version>
+    </dependency>
+    <sabFiles>
+      <ti:include path="toolkit.xml" root="toolkitDir"/>
+      <ti:include path="impl/java/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/java/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/nl/*.dat" root="toolkitDir"/>
+      <ti:include path="etc/**" root="toolkitDir"/>
+      <ti:include path="lib/**" root="toolkitDir"/>
+      <ti:include path="nl/**" root="toolkitDir"/>
+      <ti:include path="opt/**" root="toolkitDir"/>
+    </sabFiles>
+  </toolkit>
+
+</toolkitModel>
