@@ -1,30 +1,50 @@
 namespace com.ibm.streamsx.tcp ;
 
-/** Schema for the output port 0 or input port 0 if the data is an rstring.
+/** Common schema for host / port.
+ * * srcIP represents the IP address of the host to connect to.
+ * * srcPort represents the port on the host to connect to.
+ */
+type TcpServerConnT = rstring srcIP, uint32 srcPort ;
+
+/** Schema for the output port 0 if the data is an rstring.
  * * line represents the data encoded as rstring
- * * srcIP represents the IP address of the remote host to connect to.
- * * srcPort represents the port on the remote host to connect to.
+ * * TcpServerConnT represents the remote connection
  */
-type TcpServerStrT = rstring line, rstring srcIP, uint32 srcPort ;
+type TcpServerStrT = tuple<rstring line>, TcpServerConnT;
 
-/** Schema for the output port 0 or input port 0 if the data is a blob.
+/** Schema for the output port 0 if the data is a blob.
  * * block represents the data encoded as blob
- * * srcIP represents the IP address of the remote host to connect to.
- * * srcPort represents the port on the remote host to connect to.
+ * * TcpServerConnT represents the remote connection
  */
-type TcpServerBlobT = blob block, rstring srcIP, uint32 srcPort ;
-
-/** Schema for the output port 0 or input port 0 if the data is a blob.
- * * raw represents the data encoded as binary raw format
- * * srcIP represents the IP address of the remote host to connect to.
- * * srcPort represents the port on the remote host to connect to.
- */
-type TcpServerRawT = blob raw, rstring srcIP, uint32 srcPort ;
+type TcpServerBlobT = tuple<blob block>, TcpServerConnT;
 
 /** Schema for the output port 1 to report status of connection
  * * status represents status of connection in rstring
- * * srcIP represents the IP address of the remote host to connect to.
- * * srcPort represents the port on the remote host to connect to.
+ * * TcpServerConnT represents the remote connection
  */
-type TcpServerStatusT = rstring status, rstring srcIP, uint32 srcPort ;
+type TcpServerStatusT = tuple<rstring status>, TcpServerConnT;
 
+/** Enum for action event definition.
+ * * LISTEN represents the new dynamic listener to open.
+ * * RESPONSE represents the client response in the duplex connection.
+ */
+type ActionEventT = enum{LISTEN,RESPONSE};
+
+/** Schema for the input port 0 if the data is an rstring.
+ * * event represents the kind of the received event (if LISTEN then line is ignored).
+ * * TcpServerStrT is the same as output port 0
+ */
+type TcpServerStrEventT = tuple<ActionEventT event>, TcpServerStrT;
+
+/** Schema for the input port 0 or input port 0 if the data is a blob.
+ * * event represents the kind of the received event (if LISTEN then block is ignored).
+ * * TcpServerBlobT is the same as output port 0
+ */
+type TcpServerBlobEventT = tuple<ActionEventT event>, TcpServerBlobT;
+
+/** Schema for the input port 0 or input port 0 if the data is a blob.
+ * * event represents the kind of the received event (if LISTEN then raw is ignored).
+ * * raw represents the data encoded as binary raw format
+ * * TcpServerConnT represents the remote connection
+ */
+type TcpServerRawEventT = tuple<ActionEventT event, blob raw>, TcpServerConnT;

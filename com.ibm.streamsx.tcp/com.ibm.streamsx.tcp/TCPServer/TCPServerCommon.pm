@@ -18,7 +18,8 @@ sub verify($)
 	{
 		verifyInputPort($model);
 	}
-	else {
+	else
+	{
 		verifyResponseParams($model);
 	}
 }
@@ -31,46 +32,24 @@ sub verifyInputPort($) {
    my $iport = $model->getInputPortAt(0);
    my $type = $iport->getSPLTupleType();
    
-
-    # attributes for port 0: name => type, [m|o] (mandatory "m" or optional "o")
-	my %attributes = (	line => ["rstring","m"],
-						block => ["blob","m"],
-						raw => ["blob","m"],
-						srcIP => ["rstring","o"],
-						srcPort => ["uint32","o"]);
-
-	my $noOfAttr = $iport->getNumberOfAttributes();
-	my $noOfMandAttr = 0;
-	my $a;
-	my $t;
-	
-	for (my $i = 0; $i < $noOfAttr; ++$i) {
-		$a = $iport->getAttributeAt($i)->getName();
-		$t = $iport->getAttributeAt($i)->getSPLType();
-		SPL::CodeGen::exitln("The '$a' attribute in the schema for input port number 0 is not allowed.", $iport->getSourceLocation()) if (not defined($attributes{$a}));
-		SPL::CodeGen::exitln("The type of the '$a' attribute in the schema for port number 0 is '$t', but the '$attributes{$a}[0]' type is expected.", $iport->getSourceLocation()) if ($attributes{$a}[0] ne $t);
+   SPL::CodeGen::checkMinimalSchema ($iport,
+   		{ name => "event", type => "enum{LISTEN,RESPONSE}" },
+   		{ name => "srcIP", type => "rstring" },
+   		{ name => "srcPort", type => "uint32" }
+   );
+   
+   SPL::CodeGen::checkAnySchema ($iport,
+   		{ name => "line", type => "rstring" },
+   		{ name => "block", type => "blob" },
+   		{ name => "raw", type => "blob" }
+   );
  
-	}
-	
-	my $line = $iport->getAttributeByName("line");
-	my $block = $iport->getAttributeByName("block");	
-	
-	#SPL::CodeGen::exitln("The schema for input port number 0 expects 'line' OR 'block' attribute.", $iport->getSourceLocation()) 
-	#	if (defined $line && defined $block);
-		
-	# check that srcIP and #srcPort must exist		
-	my $srcIP = $iport->getAttributeByName("srcIP");
-	my $srcPort = $iport->getAttributeByName("srcPort");
-	
-	if (!(defined $srcIP))
-	{
-		SPL::CodeGen::exitln("The schema for input port number 0 expects 'rstring srcIP' as an attribute.", $iport->getSourceLocation())
-	}
-	
-	if (!(defined $srcPort))
-	{
-		SPL::CodeGen::exitln("The schema for input port number 0 expects 'uint32 srcPort' as an attribute.", $iport->getSourceLocation())
-	}
+   my $lineCount = defined $iport->getAttributeByName("line");
+   my $blockCount = defined $iport->getAttributeByName("block");
+   my $rawCount = defined $iport->getAttributeByName("raw");
+
+   SPL::CodeGen::exitln("The schema for input port number 0 expects EITHER 'line' OR 'block' OR 'raw' attribute.", $iport->getSourceLocation()) 
+   unless (($lineCount + $blockCount + $rawCount) == 1);
 }
 
 
@@ -123,7 +102,8 @@ my ($model) = @_;
 
 # check output for optional port 1
    $oport = $model->getOutputPortAt(1);
-   if ($oport){
+   if ($oport)
+   {
 	   SPL::CodeGen::checkMinimalSchema ($oport, 
     	{ name => "status", type => "rstring"   },
        	{ name => "srcIP", type => "rstring"  },

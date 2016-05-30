@@ -13,11 +13,11 @@
 #include <tr1/unordered_map>
 #include <streams_boost/asio.hpp>
 #include <streams_boost/shared_ptr.hpp>
-#include <streams_boost/spirit/include/karma.hpp>
 #include <streams_boost/thread/mutex.hpp>
 
 #include "mcts/async_data_item.h"
 #include "mcts/data_item.h"
+#include "mcts/acceptor.h"
 #include "mcts/connection.h"
 #include "mcts/data_handler.h"
 #include "mcts/info_handler.h"
@@ -63,25 +63,29 @@ namespace mcts
         template<outFormat_t Format>
         void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
 
+        /// Create an acceptor
+        void createAcceptor(std::string const & address, uint32_t port);
+
         /// Add new connection to a map of connections
         void mapConnection(TCPConnectionPtr const & connPtr);
 
         /// Remove non-valid connection from a map of connections
-//        void unmapConnection(std::string const & connStr);
         TCPConnectionWeakPtrMap::iterator unmapConnection(TCPConnectionWeakPtrMap::iterator iter);
 
         /// Find a connection in a map of connections
-//        bool findConnection(std::string const & connStr, TCPConnectionWeakPtr & connWeakPtr);
         TCPConnectionWeakPtrMap::iterator findConnection(std::string const & connStr);
         TCPConnectionWeakPtrMap::iterator findFirstConnection();
+
+    private:
+        /// Create an acceptor
+//        inline void createAcceptor(TCPAcceptorPtr & acceptor, std::string const & address, uint32_t port);
 
         /// Create a connection string
         inline const std::string createConnectionStr(std::string const & ipAddress, uint32_t port);
 
-    private:
         /// Handle completion of an asynchronous accept operation
         /// @param e the error code of the operation
-        void handleAccept(streams_boost::system::error_code const & e);
+        void handleAccept(TCPAcceptorPtr & acceptor, streams_boost::system::error_code const & e);
         
         /// The number of threads that will call io_service::run()
         std::size_t threadPoolSize_;
@@ -107,9 +111,6 @@ namespace mcts
         /// Service pool used for async operations
         io_service_pool ioServicePool_;
         
-        /// Acceptor used to listen for incoming connections.
-        streams_boost::asio::ip::tcp::acceptor acceptor_;
-        
         /// The handler used to process the status messages (connect, disconnect, reject).
         InfoHandler infoHandler_;
 
@@ -133,9 +134,6 @@ namespace mcts
 
         /// When disabled - make the connection read only or shutdown..
         bool makeConnReadOnly_;
-
-        /// The next connection to be accepted.
-        TCPConnectionPtr nextConnection_;
 
         /// TCPConnection map to handle duplex communication
         TCPConnectionWeakPtrMap connMap_;

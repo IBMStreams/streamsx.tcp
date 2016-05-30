@@ -25,41 +25,24 @@
 using namespace SPL;
 
 <%
-  my $port = $model->getParameterByName("port")->getValueAt(0)->getCppExpression();
-  my $threadPoolSize = $model->getParameterByName("threadPoolSize")->getValueAt(0)->getCppExpression();
-  my $connectionCap = $model->getParameterByName("connectionCap");
-  if (not defined($connectionCap)) {
-      $connectionCap = "std::numeric_limits<std::size_t>::max()";
-  } else {
-      $connectionCap = $connectionCap->getValueAt(0)->getCppExpression();
-  }
-  my $blockSize = $model->getParameterByName("blockSize");
-  if (not defined($blockSize)) {
-      $blockSize = 0;
-  } else {
-      $blockSize = $blockSize->getValueAt(0)->getCppExpression();
-  }
+  my $address = ($_ = $model->getParameterByName('address')) ? $_->getValueAt(0)->getCppExpression() : 'SPL::Functions::Utility::getHostName().string()';
+  my $port = ($_ = $model->getParameterByName('port')) ? $_->getValueAt(0)->getCppExpression() : 0;
+  my $threadPoolSize = $model->getParameterByName('threadPoolSize')->getValueAt(0)->getCppExpression();
+  my $blockSize = ($_ = $model->getParameterByName('blockSize')) ? $_->getValueAt(0)->getCppExpression() : 0;
+  my $connectionCap = ($_ = $model->getParameterByName('connectionCap')) ? $_->getValueAt(0)->getCppExpression() : 'std::numeric_limits<std::size_t>::max()';
 
-  my $keepAlive = $model->getParameterByName("keepAlive");
-  # Apply default value for keepAlive.
-  $keepAlive = $keepAlive ? $keepAlive->getValueAt(0)->getCppExpression() : "";
-
-  my $maxUnreadResponseCount = $model->getParameterByName("maxUnreadResponseCount");
-  # Apply default value for maxUnreadResponseCount.
-  $maxUnreadResponseCount = $maxUnreadResponseCount ? $maxUnreadResponseCount->getValueAt(0)->getCppExpression() : 100;
+  my $broadcastResponse = ($_ = $model->getParameterByName('broadcastResponse')) ? $_->getValueAt(0)->getCppExpression() : 'false';
+  my $keepAlive = ($_ = $model->getParameterByName('keepAlive')) ? $_->getValueAt(0)->getCppExpression() : '';
+  my $maxUnreadResponseCount = ($_ = $model->getParameterByName('maxUnreadResponseCount')) ? $_->getValueAt(0)->getCppExpression() : 100;
 
   # Apply default value for connReadOnly.
-  my $makeConnReadOnly = 'true';
   my $disableDuplexConnection = $model->getParameterByName("disableDuplexConnection");
+  my $makeConnReadOnly = 'true';
   $makeConnReadOnly = 'false' if ($disableDuplexConnection && $disableDuplexConnection->getValueAt(0)->getSPLExpression() eq 'shutdown');
 
-  # Apply default value for broadcastResponse.
-  my $broadcastResponse = $model->getParameterByName("broadcastResponse");
-  $broadcastResponse = $broadcastResponse ? $broadcastResponse->getValueAt(0)->getCppExpression() : 'false';
 
 	my $oport0 = $model->getOutputPortAt(0);
   	my $oport1 = $model->getOutputPortAt(1);
-  	
   	my $iport0 = $model->getInputPortAt(0);
 %>
 
@@ -69,21 +52,13 @@ using namespace SPL;
 		mcts::outFormat_t MY_OPERATOR::outFormat_ = mcts::block;
 	<%}%>
 
+    SPL::rstring MY_OPERATOR::address = <%=$address%>;
+
 __thread MY_OPERATOR::OPort0Type * MY_OPERATOR::otuple0_ = NULL;
 
 <%if ($oport1) {%>
 __thread MY_OPERATOR::OPort1Type * MY_OPERATOR::otuple1_ = NULL;
 <%}%>
-
-
-<%
-	my $address = $model->getParameterByName("address");
-	if (not defined($address)) {
-		$address = "SPL::Functions::Utility::getHostName().string()";
-	}else{
-		$address = $address->getValueAt(0)->getCppExpression();
-	}
-%>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR()
@@ -103,7 +78,6 @@ MY_OPERATOR::MY_OPERATOR()
     <%if ($keepAlive ne "") {%>
        server_.setKeepAlive(<%=$keepAlive%>.get_time(), <%=$keepAlive%>.get_probes(), <%=$keepAlive%>.get_interval());
     <%}%>
-
 }
 
 // Destructor
@@ -235,43 +209,86 @@ void MY_OPERATOR::handleMetrics(uint32_t kind, int64_t value)
 	}
 }
 
+// Enable if there is at least one input port
+<%if ($iport0) {%>
 
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-	<%if ($iport0) {%>
+
 	const IPort0Type& t = (const IPort0Type&) tuple;
+
+	if (t.get_event() == IPort0Type::event_type::RESPONSE)
+	{
+		// get dest server
+		<%if ($iport0->getAttributeByName("srcIP")){%>
+		const std::string & destIp = t.get_srcIP();
+		<%}%>
+		
+		// get dest IP
+		<%if ($iport0->getAttributeByName("srcPort")) {%>
+		const uint32_t destPort = (uint32_t)t.get_srcPort();
+		<%}%>
 	
-	// get dest server
-	<%if ($iport0->getAttributeByName("srcIP")){%>
-	const std::string & destIp = t.get_srcIP();
-	<%}%>
+		// if data is rstring, call handleWrite<mcts::line>(string, ipAddress, port)	
+		<%if ($iport0->getAttributeByName("line")) {%>
+			
+			std::string const & line = t.get_line();
+			handleWrite<mcts::line>(line, destIp, destPort);
 	
-	// get dest IP
-	<%if ($iport0->getAttributeByName("srcPort")) {%>
-	const uint32_t destPort = (uint32_t)t.get_srcPort();
-	<%}%>
-
-	// if data is rstring, call handleWrite<mcts::line>(string, ipAddress, port)	
-	<%if ($iport0->getAttributeByName("line")) {%>
+		// else if idata is a block, call handleWrite<mcts::block>(blob, ipAddress, port)		
+		<%} elsif ($iport0->getAttributeByName("block")) {%>
+			
+			SPL::blob const & block = t.get_block();
+			handleWrite<mcts::block>(block, destIp, destPort);
+	
+		// else if idata is a raw, call handleWrite<mcts::raw>(blob, ipAddress, port)		
+		<%} else {%>
+			
+			SPL::blob const & raw = t.get_raw();
+			handleWrite<mcts::raw>(raw, destIp, destPort);
+		<%}%>
+	}
+	else if (t.get_event() == IPort0Type::event_type::LISTEN)
+	{
+		// get new address
+		<%if ($iport0->getAttributeByName("srcIP")){%>
+			const SPL::rstring & srcAddress = (t.get_srcIP() != "") ? t.get_srcIP() : MY_OPERATOR::address;
+		<%}
+		else {%>
+			const SPL::rstring & srcAddress = MY_OPERATOR::address;
+		<%}%>
 		
-		std::string const & line = t.get_line();
-		handleWrite<mcts::line>(line, destIp, destPort);
-
-	// else if idata is a block, call handleWrite<mcts::block>(blob, ipAddress, port)		
-	<%} elsif ($iport0->getAttributeByName("block")) {%>
+		// get new port
+		<%if ($iport0->getAttributeByName("srcPort")) {%>
+		const uint32_t srcPort = (uint32_t)t.get_srcPort();
+		<%}%>
 		
-		SPL::blob const & block = t.get_block();
-		handleWrite<mcts::block>(block, destIp, destPort);
-
-	// else if idata is a raw, call handleWrite<mcts::raw>(blob, ipAddress, port)		
-	<%} else {%>
+		const SPL::rstring connStr = srcAddress + ":" + spl_cast<SPL::rstring,uint32_t>::cast(srcPort);
 		
-		SPL::blob const & raw = t.get_raw();
-		handleWrite<mcts::raw>(raw, destIp, destPort);
-	<%}%>	
-	<%}%>
+		// Validate the new ip/port is not the same as a default
+		if (srcPort != <%=$port%> || srcAddress != MY_OPERATOR::address)
+		{
+			AutoPortMutex apm(apmutex_, *this);
+
+			if (listeners_.count(connStr) == 0)
+			{
+				listeners_.insert(connStr);
+				server_.createAcceptor(srcAddress, srcPort);
+				return;
+			}
+		}
+		
+		SPLAPPLOG(L_WARN, "The listener for '" << connStr << "' already exists", "TCPServer");
+	}
+	else
+	{
+		//Should never happen
+		THROW(SPL::SPLRuntimeOperator, "Unknown event type received");
+	}
 }
+
+<%}%>
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
 

@@ -171,8 +171,8 @@ The TCPServer operator throws an exception and terminates the operator in the fo
       </parameter>
       <parameter>
         <name>port</name>
-        <description>This mandatory parameter with type uint32 specifies the port number on which the connections will be accepted.</description>
-        <optional>false</optional>
+        <description>This optional parameter with type uint32 specifies the port number on which the connections will be accepted.</description>
+        <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
         <type>uint32</type>
@@ -259,7 +259,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
     <inputPorts>
       <inputPortSet>
         <description>
-The `TCPServer` operator has one optional input port.  The schema of the input port must be of type `TcpServerStrT` or `TCPServerBlobT` or equivalent.  The operator sends the data received to the `srcIP`:`srcPort` as specified on the incoming tuple.</description>
+The `TCPServer` operator has one optional input port.  The schema of the input port must be of type `TcpServerStrT` or `TCPServerBlobT` or equivalent.  Based on event attribute value the operator either sends the data received to the `srcIP`:`srcPort` or opens a new dynamic listener, as specified on the incoming tuple.</description>
         <windowingDescription></windowingDescription>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <windowingMode>NonWindowed</windowingMode>

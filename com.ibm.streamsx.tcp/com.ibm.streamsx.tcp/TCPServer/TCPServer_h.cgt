@@ -37,9 +37,14 @@ public:
 
     // Processing for source and threaded operators   
     void process(uint32_t idx);
-    
-    // Tuple processing for non-mutating ports
+
+    // Enable if there is at least one input port
+	<%if ($model->getInputPortAt(0)) {%>
+	
+	// Tuple processing for non-mutating ports
 	void process(Tuple const & tuple, uint32_t port);
+	
+	<%}%>
 
     // For handling data from the server
     void handleData(std::string & line, std::string const & ipAddress, uint32_t port);
@@ -72,6 +77,7 @@ private:
     std::vector<OPort0Type *> otuples0_;
     
 	static mcts::outFormat_t outFormat_;
+	static SPL::rstring address;
 
 	<%my $oport1 = $model->getOutputPortAt(1);%>
 	<%if ($oport1) {%>
@@ -80,8 +86,11 @@ private:
     <%}%>
     
     SPL::Mutex mutex_;
+    SPL::Mutex apmutex_;
     mcts::TCPServer server_;
 	OperatorMetrics & opm_;
+	
+	SPL::set<SPL::rstring> listeners_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

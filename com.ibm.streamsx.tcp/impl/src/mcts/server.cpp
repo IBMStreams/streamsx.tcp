@@ -49,7 +49,6 @@ namespace mcts
           keepAliveMaxProbesCnt_(0),
           keepAliveProbeInterval_(0),
           ioServicePool_(threadPoolSize),
-          acceptor_(ioServicePool_.get_io_service()),
           infoHandler_(iHandler),
           dataHandler_(dHandler),
           errorHandler_(eHandler),
@@ -57,19 +56,10 @@ namespace mcts
           outFormat_(outFormat),
           broadcastResponse_(broadcastResponse),
           isDuplexConnection_(isDuplexConnection),
-          makeConnReadOnly_(makeConnReadOnly),
-    	nextConnection_(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_))
+          makeConnReadOnly_(makeConnReadOnly)
     {
-    	streams_boost::asio::ip::tcp::resolver resolver(acceptor_.get_io_service());
-        streams_boost::asio::ip::tcp::resolver::query query(address, streams_boost::lexical_cast<std::string>(port));
-        streams_boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
-        acceptor_.open(endpoint.protocol());
-        acceptor_.set_option(streams_boost::asio::ip::tcp::acceptor::reuse_address(true));
-        acceptor_.bind(endpoint);
-        acceptor_.listen();
-        acceptor_.async_accept(nextConnection_->socket(),
-                               streams_boost::bind(&TCPServer::handleAccept, this,
-                                                   streams_boost::asio::placeholders::error));
+    	// if port is provided (not zero) then create a listener for it
+    	if (port) createAcceptor(address, port);
     }
     
     void TCPServer::setKeepAlive(int32_t time, int32_t probes, int32_t interval)
@@ -106,15 +96,15 @@ namespace mcts
         ioServicePool_.stop();
     }
 
-    void TCPServer::handleAccept(streams_boost::system::error_code const & e)
+    void TCPServer::handleAccept(TCPAcceptorPtr & acceptor, streams_boost::system::error_code const & e)
     {
         if (!e) {
         	if (TCPConnection::getNumberOfConnections()<=maxConnections_) {
-        		nextConnection_->start();
+        		acceptor->nextConnection()->start();
 
         		// Add a new connection to the response connection map, but only if duplex communication is required
         		if (isDuplexConnection_) {
-					mapConnection(nextConnection_);
+					mapConnection(acceptor->nextConnection());
         		}
         		// Update number of open connections metric
         		metricsHandler_.handleMetrics(0, (int64_t)mcts::TCPConnection::getNumberOfConnections());
@@ -122,7 +112,7 @@ namespace mcts
 
         		// Set the KeepAlive values as given by the user.
         		if (keepAliveIdleTime_ || keepAliveMaxProbesCnt_ || keepAliveProbeInterval_) {
-        			int32_t _fd = static_cast<int32_t> (nextConnection_->socket().native());
+        			int32_t _fd = static_cast<int32_t> (acceptor->nextConnection()->socket().native());
         			// std::cout << "Boost socket to native descriptor _fd = " << _fd << std::endl;
 
         			int32_t valopt = 1;
@@ -157,9 +147,9 @@ namespace mcts
         	}
 
 
-        	nextConnection_.reset(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_));
-            acceptor_.async_accept(nextConnection_->socket(),
-                                   streams_boost::bind(&TCPServer::handleAccept, this,
+        	acceptor->nextConnection().reset(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_));
+            acceptor->getAcceptor().async_accept(acceptor->nextConnection()->socket(),
+                                   streams_boost::bind(&TCPServer::handleAccept, this, acceptor,
                                                        streams_boost::asio::placeholders::error));
         }
     }
@@ -167,13 +157,6 @@ namespace mcts
     template<outFormat_t Format>
     void TCPServer::handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port)
     {
-//    	std::string connStr = broadcastResponse_ ? "" : createConnectionStr(ipAddress, port);
-
-//		std::cerr << "writing to: " << connStr << std::endl;
-
-//		TCPConnectionWeakPtr connWeakPtr;
-//		bool connExist = false;
-
 		TCPConnectionWeakPtrMap::iterator iter = broadcastResponse_ ? findFirstConnection() : findConnection(createConnectionStr(ipAddress, port));
 
     	if(iter == connMap_.end()) {
@@ -253,7 +236,6 @@ namespace mcts
 		connMap_[connStr] = connPtr;
     }
 
-//    void TCPServer::unmapConnection(std::string const & connStr)
     TCPConnectionWeakPtrMap::iterator TCPServer::unmapConnection(TCPConnectionWeakPtrMap::iterator iter)
     {
 		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
@@ -265,7 +247,6 @@ namespace mcts
 		return connMap_.erase(iter);
     }
 
-//    bool TCPServer::findConnection(std::string const & connStr, TCPConnectionWeakPtr & connWeakPtr)
     TCPConnectionWeakPtrMap::iterator TCPServer::findConnection(std::string const & connStr)
     {
 		#if (((STREAMS_BOOST_VERSION / 100) % 1000) < 53)
@@ -273,11 +254,6 @@ namespace mcts
 		#else
 			streams_boost::unique_lock<streams_boost::mutex> scoped_lock(mutex_);
 		#endif
-
-//		if (connMap_.count(connStr) != 0) {
-//			connWeakPtr = connMap_[connStr];
-//			return true;
-//		}
 
 		return connMap_.find(connStr);
     }
@@ -293,14 +269,19 @@ namespace mcts
 		return connMap_.begin();
     }
 
+    void TCPServer::createAcceptor(std::string const & address, uint32_t port)
+	{
+    	TCPAcceptorPtr acceptor(new TCPAcceptor(ioServicePool_.get_io_service(), address, port));
+
+    	acceptor->nextConnection().reset(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_));
+		acceptor->getAcceptor().async_accept(acceptor->nextConnection()->socket(),
+								   streams_boost::bind(&TCPServer::handleAccept, this, acceptor,
+													   streams_boost::asio::placeholders::error));
+	}
+
+
     inline const std::string TCPServer::createConnectionStr(std::string const & ipAddress, uint32_t port)
     {
-		namespace karma = streams_boost::spirit::karma;
-
-		std::string connStr;
-		std::back_insert_iterator<std::string> connStrIter(connStr);
-		karma::generate(connStrIter, karma::string << ':' << karma::uint_, ipAddress, port);
-
-		return connStr;
+		return ipAddress + ":" + streams_boost::lexical_cast<std::string>(port);
     }
 }

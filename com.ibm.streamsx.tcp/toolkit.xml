@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.0.1.0" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.0.1.2" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-  <toolkit name="com.ibm.streamsx.tcp" requiredProductVersion="4.0" version="2.0">
+  <toolkit name="com.ibm.streamsx.tcp" requiredProductVersion="4.0" version="2.1">
     <description>A multi-connection, multi-threaded source operator that accepts data from one or more TCP sockets</description>
     <uriTable>
       <uri index="2" value="com.ibm.streamsx.tcp/TCPServer"/>
@@ -133,8 +133,8 @@ The TCPServer operator throws an exception and terminates the operator in the fo
         <parameter cardinality="1" expressionMode="AttributeFree" name="address" optional="true" type="rstring">
           <description>This optional parameter with type rstring specifies a resolvable IP address or a machine name (e-g: myserver1.ibm.com, localhost etc.) on which the connections will be accepted. If "0.0.0.0" is given as an address, then the TCPServer operator will listen on all the available network interfaces including localhost (127.0.0.1). If the address parameter is not specified, this operator will listen on a network interface bound to the actual IP address of that machine's fully qualified host name.</description>
         </parameter>
-        <parameter cardinality="1" expressionMode="AttributeFree" name="port" optional="false" type="uint32">
-          <description>This mandatory parameter with type uint32 specifies the port number on which the connections will be accepted.</description>
+        <parameter cardinality="1" expressionMode="AttributeFree" name="port" optional="true" type="uint32">
+          <description>This optional parameter with type uint32 specifies the port number on which the connections will be accepted.</description>
         </parameter>
         <parameter cardinality="1" expressionMode="AttributeFree" name="threadPoolSize" optional="false" type="uint32">
           <description>This mandatory parameter with type uint32 specifies the number of threads per TCPServer operator instance.</description>
@@ -167,7 +167,7 @@ The TCPServer operator throws an exception and terminates the operator in the fo
         </parameter>
         <inputPort maxNumPorts="1" minNumPorts="1" optional="true" windowPunctInputMode="Oblivious">
           <description>
-The `TCPServer` operator has one optional input port.  The schema of the input port must be of type `TcpServerStrT` or `TCPServerBlobT` or equivalent.  The operator sends the data received to the `srcIP`:`srcPort` as specified on the incoming tuple.</description>
+The `TCPServer` operator has one optional input port.  The schema of the input port must be of type `TcpServerStrT` or `TCPServerBlobT` or equivalent.  Based on event attribute value the operator either sends the data received to the `srcIP`:`srcPort` or opens a new dynamic listener, as specified on the incoming tuple.</description>
           <windowPolicy>NonWindowed</windowPolicy>
         </inputPort>
         <outputPort expressionMode="Nonexistent" maxNumPorts="1" minNumPorts="1" optional="false" windowPunctOutputMode="Free">
@@ -209,18 +209,34 @@ This optional second output stream generates tuples when a new connection is est
 </description>
         </outputPort>
       </primitiveOp>
-      <type column="6" line="8" name="TcpServerStrT" static="true" type="rstring line, rstring srcIP, uint32 srcPort" uriIndex="1">
-        <description>Schema for the output port 0 or input port 0 if the data is an rstring.</description>
+      <type column="6" line="7" name="TcpServerConnT" static="true" type="rstring srcIP, uint32 srcPort" uriIndex="1">
+        <description>Common schema for host / port.</description>
       </type>
-      <type column="6" line="15" name="TcpServerBlobT" static="true" type="blob block, rstring srcIP, uint32 srcPort" uriIndex="1">
-        <description>Schema for the output port 0 or input port 0 if the data is a blob.</description>
+      <type column="6" line="13" name="TcpServerStrT" static="true" type="tuple&lt;rstring line>, TcpServerConnT" uriIndex="1">
+        <description>Schema for the output port 0 if the data is an rstring.</description>
       </type>
-      <type column="6" line="22" name="TcpServerRawT" static="true" type="blob raw, rstring srcIP, uint32 srcPort" uriIndex="1">
-        <description>Schema for the output port 0 or input port 0 if the data is a blob.</description>
+      <type column="6" line="19" name="TcpServerBlobT" static="true" type="tuple&lt;blob block>, TcpServerConnT" uriIndex="1">
+        <description>Schema for the output port 0 if the data is a blob.</description>
       </type>
-      <type column="6" line="29" name="TcpServerStatusT" static="true" type="rstring status, rstring srcIP, uint32 srcPort" uriIndex="1">
+      <type column="6" line="25" name="TcpServerStatusT" static="true" type="tuple&lt;rstring status>, TcpServerConnT" uriIndex="1">
         <description>Schema for the output port 1 to report status of connection</description>
       </type>
+      <type column="6" line="31" name="ActionEventT" static="true" type="enum { LISTEN, RESPONSE }" uriIndex="1">
+        <description>Enum for action event definition.</description>
+      </type>
+      <type column="6" line="37" name="TcpServerStrEventT" static="true" type="tuple&lt;ActionEventT event>, TcpServerStrT" uriIndex="1">
+        <description>Schema for the input port 0 if the data is an rstring.</description>
+      </type>
+      <type column="6" line="43" name="TcpServerBlobEventT" static="true" type="tuple&lt;ActionEventT event>, TcpServerBlobT" uriIndex="1">
+        <description>Schema for the input port 0 or input port 0 if the data is a blob.</description>
+      </type>
+      <type column="6" line="50" name="TcpServerRawEventT" static="true" type="tuple&lt;ActionEventT event, blob raw>, TcpServerConnT" uriIndex="1">
+        <description>Schema for the input port 0 or input port 0 if the data is a blob.</description>
+      </type>
+      <enumLiterals column="26" line="31" typeName="ActionEventT" uriIndex="1">
+        <enum>LISTEN</enum>
+        <enum>RESPONSE</enum>
+      </enumLiterals>
     </namespace>
     <sabFiles>
       <ti:include path="toolkit.xml" root="toolkitDir"/>
