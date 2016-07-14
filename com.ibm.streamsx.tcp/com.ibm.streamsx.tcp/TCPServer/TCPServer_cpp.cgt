@@ -52,7 +52,7 @@ using namespace SPL;
 		mcts::outFormat_t MY_OPERATOR::outFormat_ = mcts::block;
 	<%}%>
 
-    SPL::rstring MY_OPERATOR::address = <%=$address%>;
+    SPL::rstring MY_OPERATOR::address;
 
 __thread MY_OPERATOR::OPort0Type * MY_OPERATOR::otuple0_ = NULL;
 
@@ -74,6 +74,7 @@ MY_OPERATOR::MY_OPERATOR()
 	  opm_(getContext().getMetrics())
 {
     // Initialization code goes here
+      address = <%=$address%>;
     // If the user provided a KeepAlive parameter, we can set that now.
     <%if ($keepAlive ne "") {%>
        server_.setKeepAlive(<%=$keepAlive%>.get_time(), <%=$keepAlive%>.get_probes(), <%=$keepAlive%>.get_interval());
