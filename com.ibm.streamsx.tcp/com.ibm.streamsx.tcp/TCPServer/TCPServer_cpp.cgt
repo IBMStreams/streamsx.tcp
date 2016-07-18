@@ -10,7 +10,7 @@
 #include <streams_boost/thread.hpp>
 #include <streams_boost/bind.hpp>
 #include <streams_boost/shared_ptr.hpp>
-#include <streams_boost/algorithm/string/predicate.hpp>
+#include <streams_boost/algorithm/string.hpp>
 #include <stdlib.h>
 #include "mcts/data_item.h"
 
@@ -52,18 +52,22 @@ using namespace SPL;
 		mcts::outFormat_t MY_OPERATOR::outFormat_ = mcts::block;
 	<%}%>
 
-    SPL::rstring MY_OPERATOR::address;
-
 __thread MY_OPERATOR::OPort0Type * MY_OPERATOR::otuple0_ = NULL;
 
 <%if ($oport1) {%>
 __thread MY_OPERATOR::OPort1Type * MY_OPERATOR::otuple1_ = NULL;
 <%}%>
 
+inline std::string cutNewLine(std::string const& str) {
+	size_t found = str.find("\n");
+	return found != std::string::npos ? str.substr(0, found) : str;
+}
+
 // Constructor
 MY_OPERATOR::MY_OPERATOR()
-    : server_(
-              <%=$address%>, 
+    : address_(cutNewLine(<%=$address%>)),
+      server_(
+    		  address_, 
               <%=$port%>, <%=$threadPoolSize%>, <%=$connectionCap%>, <%=$maxUnreadResponseCount%>,
               <%=$blockSize%>,  MY_OPERATOR::outFormat_, <%=$broadcastResponse%>, <%=defined($iport0) ? 'true' : 'false'%>, <%=$makeConnReadOnly%>,
               streams_boost::bind(&MY_OPERATOR::handleData, this, _1, _2, _3) ,
@@ -74,7 +78,6 @@ MY_OPERATOR::MY_OPERATOR()
 	  opm_(getContext().getMetrics())
 {
     // Initialization code goes here
-      address = <%=$address%>;
     // If the user provided a KeepAlive parameter, we can set that now.
     <%if ($keepAlive ne "") {%>
        server_.setKeepAlive(<%=$keepAlive%>.get_time(), <%=$keepAlive%>.get_probes(), <%=$keepAlive%>.get_interval());
@@ -254,10 +257,10 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 	{
 		// get new address
 		<%if ($iport0->getAttributeByName("srcIP")){%>
-			const SPL::rstring & srcAddress = (t.get_srcIP() != "") ? t.get_srcIP() : MY_OPERATOR::address;
+			const SPL::rstring & srcAddress = (t.get_srcIP() != "") ? t.get_srcIP() : address_;
 		<%}
 		else {%>
-			const SPL::rstring & srcAddress = MY_OPERATOR::address;
+			const SPL::rstring & srcAddress = address_;
 		<%}%>
 		
 		// get new port
@@ -268,7 +271,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 		const SPL::rstring connStr = srcAddress + ":" + spl_cast<SPL::rstring,uint32_t>::cast(srcPort);
 		
 		// Validate the new ip/port is not the same as a default
-		if (srcPort != <%=$port%> || srcAddress != MY_OPERATOR::address)
+		if (srcPort != <%=$port%> || srcAddress != address_)
 		{
 			AutoPortMutex apm(apmutex_, *this);
 

@@ -77,7 +77,6 @@ private:
     std::vector<OPort0Type *> otuples0_;
     
 	static mcts::outFormat_t outFormat_;
-	static SPL::rstring address;
 
 	<%my $oport1 = $model->getOutputPortAt(1);%>
 	<%if ($oport1) {%>
@@ -85,6 +84,7 @@ private:
     std::vector<OPort1Type *> otuples1_;
     <%}%>
     
+	SPL::rstring address_;
     SPL::Mutex mutex_;
     SPL::Mutex apmutex_;
     mcts::TCPServer server_;
