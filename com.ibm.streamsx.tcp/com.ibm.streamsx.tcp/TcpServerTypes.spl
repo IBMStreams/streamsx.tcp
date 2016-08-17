@@ -36,13 +36,13 @@ type ActionEventT = enum{LISTEN,RESPONSE};
  */
 type TcpServerStrEventT = tuple<ActionEventT event>, TcpServerStrT;
 
-/** Schema for the input port 0 or input port 0 if the data is a blob.
+/** Schema for the input port 0 if the data is a blob.
  * * event represents the kind of the received event (if LISTEN then block is ignored).
  * * TcpServerBlobT is the same as output port 0
  */
 type TcpServerBlobEventT = tuple<ActionEventT event>, TcpServerBlobT;
 
-/** Schema for the input port 0 or input port 0 if the data is a blob.
+/** Schema for the input port 0 if the data is a blob.
  * * event represents the kind of the received event (if LISTEN then raw is ignored).
  * * raw represents the data encoded as binary raw format
  * * TcpServerConnT represents the remote connection
