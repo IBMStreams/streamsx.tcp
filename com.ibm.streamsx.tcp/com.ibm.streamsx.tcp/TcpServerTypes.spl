@@ -39,12 +39,14 @@ type TcpServerStrEventT = tuple<ActionEventT event>, TcpServerStrT;
 /** Schema for the input port 0 if the data is a blob.
  * * event represents the kind of the received event (if LISTEN then block is ignored).
  * * TcpServerBlobT is the same as output port 0
+ * * the message is prepended with the length of the blob  
  */
 type TcpServerBlobEventT = tuple<ActionEventT event>, TcpServerBlobT;
 
 /** Schema for the input port 0 if the data is a blob.
  * * event represents the kind of the received event (if LISTEN then raw is ignored).
- * * raw represents the data encoded as binary raw format
+ * * TcpServerRawEventT is similar to TcpServerBlobT - raw represents the data encoded as binary raw format
+ * * the message is not prepended with the length of the blob  
  * * TcpServerConnT represents the remote connection
  */
 type TcpServerRawEventT = tuple<ActionEventT event, blob raw>, TcpServerConnT;
