@@ -10,8 +10,8 @@ SPLC_FLAGS1 ?= -a -t ../../com.ibm.streamsx.tcp --output-directory ./output/send
 SPLC_FLAGS2 ?= -a -t ../../com.ibm.streamsx.tcp --output-directory ./output/receiver --data-directory ./data
 SPLC = $(STREAMS_INSTALL)/bin/sc
 SPL_CMD_ARGS ?= 
-SPL_MAIN_COMPOSITE1 = TCPSender
-SPL_MAIN_COMPOSITE2 = TCPReceiver
+SPL_MAIN_COMPOSITE1 = sample::TCPSender
+SPL_MAIN_COMPOSITE2 = sample::TCPReceiver
 
 all: standalone
 

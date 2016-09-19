@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.0.1.2" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.2.0.0" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
   <toolkit name="com.ibm.streamsx.tcp" requiredProductVersion="4.0" version="2.1.0.1">
     <description>A multi-connection, multi-threaded source operator that accepts data from one or more TCP sockets</description>
@@ -227,11 +227,11 @@ This optional second output stream generates tuples when a new connection is est
       <type column="6" line="37" name="TcpServerStrEventT" static="true" type="tuple&lt;ActionEventT event>, TcpServerStrT" uriIndex="1">
         <description>Schema for the input port 0 if the data is an rstring.</description>
       </type>
-      <type column="6" line="43" name="TcpServerBlobEventT" static="true" type="tuple&lt;ActionEventT event>, TcpServerBlobT" uriIndex="1">
-        <description>Schema for the input port 0 or input port 0 if the data is a blob.</description>
+      <type column="6" line="44" name="TcpServerBlobEventT" static="true" type="tuple&lt;ActionEventT event>, TcpServerBlobT" uriIndex="1">
+        <description>Schema for the input port 0 if the data is a blob.</description>
       </type>
-      <type column="6" line="50" name="TcpServerRawEventT" static="true" type="tuple&lt;ActionEventT event, blob raw>, TcpServerConnT" uriIndex="1">
-        <description>Schema for the input port 0 or input port 0 if the data is a blob.</description>
+      <type column="6" line="52" name="TcpServerRawEventT" static="true" type="tuple&lt;ActionEventT event, blob raw>, TcpServerConnT" uriIndex="1">
+        <description>Schema for the input port 0 if the data is a blob.</description>
       </type>
       <enumLiterals column="26" line="31" typeName="ActionEventT" uriIndex="1">
         <enum>LISTEN</enum>
