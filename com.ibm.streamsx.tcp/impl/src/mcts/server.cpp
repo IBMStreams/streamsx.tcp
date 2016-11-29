@@ -223,6 +223,18 @@ namespace mcts
     template void TCPServer::handleWrite<block>(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
     template void TCPServer::handleWrite<raw>(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
 
+    void TCPServer::handleClose(std::string const & ipAddress, uint32_t port)
+	{
+    	TCPConnectionWeakPtrMap::iterator iter = findConnection(createConnectionStr(ipAddress, port));
+
+    	if(iter != connMap_.end()) {
+			TCPConnectionWeakPtr connWeakPtr = iter->second;
+			TCPConnectionPtr connPtr = connWeakPtr.lock();
+			if (connPtr) connPtr->shutdown_conn(false);
+    	}
+
+	}
+
     void TCPServer::mapConnection(TCPConnectionPtr const & connPtr)
     {
     	std::string connStr = createConnectionStr(connPtr->remoteIp(), connPtr->remotePort());
@@ -269,16 +281,15 @@ namespace mcts
 		return connMap_.begin();
     }
 
-    void TCPServer::createAcceptor(std::string const & address, uint32_t port)
+    void TCPServer::createAcceptor(std::string const & ipAddress, uint32_t port)
 	{
-    	TCPAcceptorPtr acceptor(new TCPAcceptor(ioServicePool_.get_io_service(), address, port));
+    	TCPAcceptorPtr acceptor(new TCPAcceptor(ioServicePool_.get_io_service(), ipAddress, port));
 
     	acceptor->nextConnection().reset(new TCPConnection(ioServicePool_.get_io_service(), blockSize_, outFormat_, dataHandler_, infoHandler_));
 		acceptor->getAcceptor().async_accept(acceptor->nextConnection()->socket(),
 								   streams_boost::bind(&TCPServer::handleAccept, this, acceptor,
 													   streams_boost::asio::placeholders::error));
 	}
-
 
     inline const std::string TCPServer::createConnectionStr(std::string const & ipAddress, uint32_t port)
     {

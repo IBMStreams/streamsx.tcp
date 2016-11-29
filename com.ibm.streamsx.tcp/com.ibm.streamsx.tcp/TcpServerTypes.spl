@@ -25,10 +25,11 @@ type TcpServerBlobT = tuple<blob block>, TcpServerConnT;
 type TcpServerStatusT = tuple<rstring status>, TcpServerConnT;
 
 /** Enum for action event definition.
+ * * CLOSE represents the connection to close.
  * * LISTEN represents the new dynamic listener to open.
  * * RESPONSE represents the client response in the duplex connection.
  */
-type ActionEventT = enum{LISTEN,RESPONSE};
+type ActionEventT = enum{CLOSE,LISTEN,RESPONSE};
 
 /** Schema for the input port 0 if the data is an rstring.
  * * event represents the kind of the received event (if LISTEN then line is ignored).

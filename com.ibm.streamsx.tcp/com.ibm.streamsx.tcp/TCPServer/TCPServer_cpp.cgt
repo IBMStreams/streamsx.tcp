@@ -285,6 +285,23 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 		
 		SPLAPPLOG(L_WARN, "The listener for '" << connStr << "' already exists", "TCPServer");
 	}
+	else if (t.get_event() == IPort0Type::event_type::CLOSE)
+	{
+		// get an address
+		<%if ($iport0->getAttributeByName("srcIP")){%>
+			const SPL::rstring & srcAddress = (t.get_srcIP() != "") ? t.get_srcIP() : address_;
+		<%}
+		else {%>
+			const SPL::rstring & srcAddress = address_;
+		<%}%>
+		
+		// get a port
+		<%if ($iport0->getAttributeByName("srcPort")) {%>
+		const uint32_t srcPort = (uint32_t)t.get_srcPort();
+		<%}%>
+		
+		server_.handleClose(srcAddress, srcPort);
+	}
 	else
 	{
 		//Should never happen

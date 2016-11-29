@@ -63,6 +63,9 @@ namespace mcts
         template<outFormat_t Format>
         void handleWrite(SPL::blob & raw, std::string const & ipAddress, uint32_t port);
 
+        /// Handle close operation
+        void handleClose(std::string const & address, uint32_t port);
+
         /// Create an acceptor
         void createAcceptor(std::string const & address, uint32_t port);
 
