@@ -230,7 +230,7 @@ namespace mcts
     	if(iter != connMap_.end()) {
 			TCPConnectionWeakPtr connWeakPtr = iter->second;
 			TCPConnectionPtr connPtr = connWeakPtr.lock();
-			if (connPtr) connPtr->shutdown_conn(false);
+			if (connPtr) connPtr->shutdown_conn(false, true);
     	}
 
 	}

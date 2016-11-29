@@ -301,6 +301,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 		<%}%>
 		
 		server_.handleClose(srcAddress, srcPort);
+		
+		SPLAPPLOG(L_INFO, "The connection '" << srcAddress << ":" << srcPort << "' is requested to shutdown", "TCPServer");
 	}
 	else
 	{

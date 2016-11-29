@@ -64,7 +64,7 @@ namespace mcts
         void start();
 
         /// Shutdown sending operation for the connection.
-        void shutdown_conn(bool makeConnReadOnly);
+        void shutdown_conn(bool makeConnReadOnly, bool closeSocket = false);
 
     private:
         /// Handle completion of a read operation.

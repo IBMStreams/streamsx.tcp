@@ -92,7 +92,7 @@ namespace mcts
                                                     streams_boost::asio::placeholders::bytes_transferred));
     }
 
-    void TCPConnection::shutdown_conn(bool makeConnReadOnly)
+    void TCPConnection::shutdown_conn(bool makeConnReadOnly, bool closeSocket)
     {
     	if(!isShutdown_) {
     		isShutdown_ = true;
@@ -103,6 +103,7 @@ namespace mcts
 			else {
 				socket_.cancel(ec);
 				socket_.shutdown(streams_boost::asio::ip::tcp::socket::shutdown_both, ec);
+				if(closeSocket) socket_.close();
 			}
     	}
     }

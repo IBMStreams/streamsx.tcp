@@ -33,7 +33,7 @@ sub verifyInputPort($) {
    my $type = $iport->getSPLTupleType();
    
    SPL::CodeGen::checkMinimalSchema ($iport,
-   		{ name => "event", type => "enum{LISTEN,RESPONSE}" },
+   		{ name => "event", type => "enum{CLOSE,LISTEN,RESPONSE}" },
    		{ name => "srcIP", type => "rstring" },
    		{ name => "srcPort", type => "uint32" }
    );
