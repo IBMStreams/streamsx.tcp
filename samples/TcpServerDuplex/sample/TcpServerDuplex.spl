@@ -24,7 +24,7 @@ composite TcpServerDuplex
 		stream<TcpServerStrT> TcpServerOp = TCPServer(Functor_3_out0 as inPort0Alias)
 		{
 			param
-				port : 22222u ;
+				port : 2222u ;
 				threadPoolSize : 2u ;
 				connectionCap : 5u ;
 				keepAlive : { time = 7200u, probes = 5u, interval = 100u } ;
@@ -37,7 +37,7 @@ composite TcpServerDuplex
 			}
 		}
 
-		(stream<TcpServerStrT> Functor_3_out0) as Functor_3 = Functor(TcpServerOp)
+		(stream<TcpServerStrEventT> Functor_3_out0) as Functor_3 = Functor(TcpServerOp)
 		{
 			logic
 				state: {mutable uint64 cnt=0;}
@@ -46,7 +46,9 @@ composite TcpServerDuplex
 				}
 			output
 				//Functor_3_out0: line = "Response: " + (rstring) cnt + "|"  + getResponse() + "\n";
-				Functor_3_out0: line = line + "\n";
+				Functor_3_out0:
+					event = RESPONSE,
+					line = line + "\n";
 		}
 
 }

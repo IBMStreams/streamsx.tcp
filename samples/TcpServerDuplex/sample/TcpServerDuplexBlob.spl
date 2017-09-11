@@ -19,7 +19,7 @@ composite TcpServerDuplexBlob
 		stream<TcpServerBlobT> Result1 = TCPServer(Functor_3_out0)
 		{
 			param
-				port : 22222u ;
+				port : 2222u ;
 				threadPoolSize : 2u ;
 				connectionCap : 5u ;
 				blockSize : 1024u ;
@@ -34,8 +34,9 @@ composite TcpServerDuplexBlob
 				quoteStrings : false ;
 		}
 
-		(stream<blob block, rstring srcIP, uint32 srcPort> Functor_3_out0) as Functor_3 = Functor(Result1)
+		(stream<TcpServerBlobEventT> Functor_3_out0) as Functor_3 = Functor(Result1)
 		{
+			output Functor_3_out0 : event = RESPONSE;
 		}
 
 }
