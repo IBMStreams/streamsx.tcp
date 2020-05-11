@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="SPL File TcpServerTypes.spl"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_compilationunit"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>SPL File TcpServerTypes.spl</title>
+</head>
+<body id="spldoc_compilationunit">
+
+
+<h1 class="title topictitle1">SPL File <tt class="ph tt">TcpServerTypes.spl</tt></h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.tcp.html">com.ibm.streamsx.tcp 2.1.1</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.tcp.html">com.ibm.streamsx.tcp</a> &gt; TcpServerTypes.spl</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Content</h2>
+  
+  <dl class="dl">
+    <dt class="dt dlterm"/>
+<dd class="dd"/>
+
+    
+      <dt class="dt dlterm splhead-2">Types</dt>
+
+      <dd class="dd">
+<ul class="sl simple">
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.tcp$TcpServerTypes.html#spldoc_compilationunit__type__ActionEventT">ActionEventT</a></strong>: Enum for action event definition.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.tcp$TcpServerTypes.html#spldoc_compilationunit__type__TcpServerBlobEventT">TcpServerBlobEventT</a></strong>: Schema for the input port 0 if the data is a blob.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.tcp$TcpServerTypes.html#spldoc_compilationunit__type__TcpServerBlobT">TcpServerBlobT</a></strong>: Schema for the output port 0 if the data is a blob.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.tcp$TcpServerTypes.html#spldoc_compilationunit__type__TcpServerConnT">TcpServerConnT</a></strong>: Common schema for host / port.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.tcp$TcpServerTypes.html#spldoc_compilationunit__type__TcpServerRawEventT">TcpServerRawEventT</a></strong>: Schema for the input port 0 if the data is a blob.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.tcp$TcpServerTypes.html#spldoc_compilationunit__type__TcpServerStatusT">TcpServerStatusT</a></strong>: Schema for the output port 1 to report status of connection 
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.tcp$TcpServerTypes.html#spldoc_compilationunit__type__TcpServerStrEventT">TcpServerStrEventT</a></strong>: Schema for the input port 0 if the data is an rstring.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.tcp$TcpServerTypes.html#spldoc_compilationunit__type__TcpServerStrT">TcpServerStrT</a></strong>: Schema for the output port 0 if the data is an rstring.
+</li>
+
+</ul>
+
+      </dd>
+
+    
+  </dl>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Types</h2>
+  
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__TcpServerConnT"><h2 class="title sectiontitle splpart">TcpServerConnT</h2>
+  
+</div>
+<div class="section">
+
+<div class="p">Common schema for host / port.
+<ul class="ul">
+<li class="li"> srcIP represents the IP address of the host to connect to.</li>
+
+<li class="li"> srcPort represents the port on the host to connect to. </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">TcpServerConnT = rstring srcIP, uint32 srcPort;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__TcpServerStrT"><h2 class="title sectiontitle splpart">TcpServerStrT</h2>
+  
+</div>
+<div class="section">
+
+<div class="p">Schema for the output port 0 if the data is an rstring.
+<ul class="ul">
+<li class="li"> line represents the data encoded as rstring</li>
+
+<li class="li"> TcpServerConnT represents the remote connection </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">TcpServerStrT = tuple&lt;rstring line&gt;, TcpServerConnT;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__TcpServerBlobT"><h2 class="title sectiontitle splpart">TcpServerBlobT</h2>
+  
+</div>
+<div class="section">
+
+<div class="p">Schema for the output port 0 if the data is a blob.
+<ul class="ul">
+<li class="li"> block represents the data encoded as blob</li>
+
+<li class="li"> TcpServerConnT represents the remote connection </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">TcpServerBlobT = tuple&lt;blob block&gt;, TcpServerConnT;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__TcpServerStatusT"><h2 class="title sectiontitle splpart">TcpServerStatusT</h2>
+  
+</div>
+<div class="section">
+
+<div class="p">Schema for the output port 1 to report status of connection
+<ul class="ul">
+<li class="li"> status represents status of connection in rstring</li>
+
+<li class="li"> TcpServerConnT represents the remote connection </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">TcpServerStatusT = tuple&lt;rstring status&gt;, TcpServerConnT;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__ActionEventT"><h2 class="title sectiontitle splpart">ActionEventT</h2>
+  
+</div>
+<div class="section">
+
+<div class="p">Enum for action event definition.
+<ul class="ul">
+<li class="li"> CLOSE represents the connection to close.</li>
+
+<li class="li"> LISTEN represents the new dynamic listener to open.</li>
+
+<li class="li"> RESPONSE represents the client response in the duplex connection. </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">ActionEventT = enum { CLOSE, LISTEN, RESPONSE };</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__TcpServerStrEventT"><h2 class="title sectiontitle splpart">TcpServerStrEventT</h2>
+  
+</div>
+<div class="section">
+
+<div class="p">Schema for the input port 0 if the data is an rstring.
+<ul class="ul">
+<li class="li"> event represents the kind of the received event (if LISTEN then line is ignored).</li>
+
+<li class="li"> TcpServerStrT is the same as output port 0 </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">TcpServerStrEventT = tuple&lt;ActionEventT event&gt;, TcpServerStrT;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__TcpServerBlobEventT"><h2 class="title sectiontitle splpart">TcpServerBlobEventT</h2>
+  
+</div>
+<div class="section">
+
+<div class="p">Schema for the input port 0 if the data is a blob.
+<ul class="ul">
+<li class="li"> event represents the kind of the received event (if LISTEN then block is ignored).</li>
+
+<li class="li"> TcpServerBlobT is the same as output port 0</li>
+
+<li class="li"> the message is prepended with the length of the blob   </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">TcpServerBlobEventT = tuple&lt;ActionEventT event&gt;, TcpServerBlobT;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__TcpServerRawEventT"><h2 class="title sectiontitle splpart">TcpServerRawEventT</h2>
+  
+</div>
+<div class="section">
+
+<div class="p">Schema for the input port 0 if the data is a blob.
+<ul class="ul">
+<li class="li"> event represents the kind of the received event (if LISTEN then raw is ignored).</li>
+
+<li class="li"> TcpServerRawEventT is similar to TcpServerBlobT - raw represents the data encoded as binary raw format</li>
+
+<li class="li"> the message is not prepended with the length of the blob  </li>
+
+<li class="li"> TcpServerConnT represents the remote connection </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">TcpServerRawEventT = tuple&lt;ActionEventT event, blob raw&gt;, TcpServerConnT;</tt>
+   </p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>
