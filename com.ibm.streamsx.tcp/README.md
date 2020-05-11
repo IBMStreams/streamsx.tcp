@@ -1,7 +1,5 @@
-Details about the com.ibm.streamsx.tcp toolkit and information about testing it
--------------------------------------------------------------------------------
+## Details about the com.ibm.streamsx.tcp toolkit and information about testing it
 
-=============================================================================
 If you use Streams Studio for your development, then you can import the com.ibm.streamsx.tcp 
 project and the TcpServerSample project into your workspace. When you import, both of those
 projects will be built automatically. If needed, you can right-click on each of those projects and
@@ -18,8 +16,7 @@ c) Both of them will run and you will see a message displayed by the TCPSender t
 d) Now, you can stop the receiver.
 e) You can verify the results by opening the result files created in the data directory.
 
-You are done verifying the functions of the com.ibm.streamsx.tcp toolkit.
-=============================================================================
+## You are done verifying the functions of the com.ibm.streamsx.tcp toolkit.
 
 If you don't use Streams Studio and if you use vi, emacs or any other text editor for your 
 Streams application development, then you can build and test by following these steps: 
