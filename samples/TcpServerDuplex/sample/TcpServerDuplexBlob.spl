@@ -5,7 +5,7 @@ use com.ibm.streamsx.tcp::* ;
 /** TcpServerDuplex sample demonstrates how to enable full-duplex support on the TCPServer operator.
  * Data is encoded as blob in this sample.
  */
-composite TcpServerDuplexBlob
+public composite TcpServerDuplexBlob
 {
 	graph
 	    // Start the TCP server at local host and port 2222.

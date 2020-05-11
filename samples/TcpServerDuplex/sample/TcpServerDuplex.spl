@@ -10,7 +10,7 @@ rstring getResponse()
 /** TcpServerDuplex sample demonstrates how to enable full-duplex support on the TCPServer operator.
  * Data is encoded as rstring in this sample
  */
-composite TcpServerDuplex
+public composite TcpServerDuplex
 {
 	graph
 		// Start the TCP server at local host and port 2222.
