@@ -8,6 +8,7 @@ all: mctsLib
 	
 clean: cleanspldoc
 	cd impl; make clean
+	spl-make-toolkit -c -i .
 	
 mctsLib:
 	cd impl; make all
@@ -19,7 +20,7 @@ spldoc:
 	spl-make-doc -i .
 	
 cleanspldoc:
-	cd doc; rm -R spldoc		
+	rm -Rf doc		
 	
 		
 	
