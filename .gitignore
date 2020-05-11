@@ -1,0 +1,11 @@
+*_cpp.pm
+*_h.pm
+toolkit.xml
+output
+data
+**/.apt_generated/
+/tmp/
+**/toolkit.xml
+/doc/
+/com.ibm.streamsx.tcp/doc/
+**/.DS_Store
