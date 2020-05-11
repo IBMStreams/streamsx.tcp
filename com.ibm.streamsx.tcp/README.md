@@ -64,7 +64,7 @@ You can see the results from these tests in the samples/TcpServerSample/data dir
 these applications after verifying the results by pressing Ctrl C in those terminal windows.
 Browse the code for the test applications to understand how the TCPServer operator is used in different ways.
 
-===========================================================================================================
+```
 For any problems or questions about this toolkit, copy everyone below in an email to get a quick response:
 
 This toolkit was originally designed and developed by Bugra Gedik (bgedik@gmail.com) 
@@ -76,4 +76,4 @@ Vitali Zoubov  (vzoubov@us.ibm.com)
 Senthil Nathan (sen@us.ibm.com)
 Frank Scharffenberg (frank.scharffenberg@de.ibm.com)
 Leonid Gorelik (leonid.gorelik@il.ibm.com)
-===========================================================================================================
+```
