@@ -9,8 +9,9 @@ technicalities about the TCPServer operator.
 
 <ol>
 <li>com.ibm.streamsx.tcp/README</li>
-<li>com.ibm.streamsx.tcp/doc/com.ibm.streamsx.tcp.Multiconnection-Tcp-Server.html</li>
 </ol>
+
+[SPLDoc](http://ibmstreams.github.io/streamsx.tcp/doc/spldoc/html/tk$com.ibm.streamsx.tcp/tk$com.ibm.streamsx.tcp.html)
 
 To learn more about Streams:
 * [IBM Streams on Github](http://ibmstreams.github.io)
