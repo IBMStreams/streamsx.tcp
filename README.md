@@ -7,11 +7,8 @@ many high performance commercial Streams engagements.
 If you are interested in taking advantage of this toolkit, you can start reading the following to understand the
 technicalities about the TCPServer operator.
 
-<ol>
-<li>com.ibm.streamsx.tcp/README</li>
-</ol>
-
-[SPLDoc](http://ibmstreams.github.io/streamsx.tcp/doc/spldoc/html/tk$com.ibm.streamsx.tcp/tk$com.ibm.streamsx.tcp.html)
+* [com.ibm.streamsx.tcp/README](com.ibm.streamsx.tcp/README.md)
+* [SPLDoc](http://ibmstreams.github.io/streamsx.tcp/doc/spldoc/html/tk$com.ibm.streamsx.tcp/tk$com.ibm.streamsx.tcp.html)
 
 To learn more about Streams:
 * [IBM Streams on Github](http://ibmstreams.github.io)
