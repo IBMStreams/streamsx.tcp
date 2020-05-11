@@ -15,7 +15,7 @@ use com.ibm.streamsx.tcp::TCPServer;
 //
 // You must first start the TCPReceiver application and after that
 // start this TCPSender application.
-composite TCPSender
+public composite TCPSender
 {
     graph
         // ========================================================================================================= 

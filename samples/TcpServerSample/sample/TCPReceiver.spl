@@ -14,7 +14,7 @@ use com.ibm.streamsx.tcp::TCPServer;
 //
 // You must first start this TCPReceiver application and after that
 // start the TCPSender application.
-composite TCPReceiver
+public composite TCPReceiver
 {
     graph
         // Receives data as string values with new line boundaries.
